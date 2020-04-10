@@ -1,0 +1,19 @@
+{
+  "missionbreath_inhale-followup" : {
+    "type" : "text",
+    "text" : "들이 마시고 나면 '들이마셨어'라고 알려줘"
+  },
+  "missionbreath-followup" : {
+    "type" : "quickReplies",
+    "text" : "좋아, 싫어 처럼 답변 해줘",
+    "replies" : ["좋아", "다음에 하자"]
+  },
+  "default" : {
+    "type" : "randomText",
+    "textList" : [
+      "무슨 말인지 잘 모르겠어",
+      "으음??",
+      "잘 모르겠어ㅜ"
+    ]
+  }
+}
