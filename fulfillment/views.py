@@ -16,6 +16,7 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
 import pathlib
+from firebase_admin import storage
 path = str(pathlib.Path().absolute())
 cred = credentials.Certificate(path + '/environment/reindeer-fulfillment-firebase-adminsdk-cwcle-f6101f3cf3.json')
 default_app = firebase_admin.initialize_app(cred)
@@ -212,16 +213,23 @@ class Processor():
         if intent != None:
             self.contexts = addIntentToContexts(self.contexts, intent)
         ffResponse.addContexts(self.contexts)
+        ffResponse.addButton(url = "https://www.buymeacoffee.com/reindeer",buttonText = "레인디어 후원하기")
         return ffResponse
 
     def generalFeelBad(self):
-        # contextList = getActionContextNames(self.contexts)
-        # if len(contextList) >= 1:
-        #     ffResponse = scenarioFromJson(fileName=  paramScenarios.feelbad, param=contextList[0])
-        # else:
-        #     ffResponse = scenarioFromJson(fileName=  paramScenarios.feelbad, param = "default")
-        ffResponse = FulfillmentResponse()
-        ffResponse.addImage("https://firebasestorage.googleapis.com/v0/b/reindeer-fulfillment.appspot.com/o/%E1%84%8F%E1%85%A1%E1%84%86%E1%85%A6%E1%84%85%E1%85%A1%E1%84%85%E1%85%B3%E1%86%AF%E1%84%86%E1%85%A5%E1%86%B7%E1%84%8E%E1%85%AE%E1%84%86%E1%85%A7%E1%86%AB%E1%84%8B%E1%85%A1%E1%86%AB%E1%84%83%E1%85%AB_8.png?alt=media&token=7cf24584-7ecc-434a-91d7-8c99fd7d1e18")
+        contextList = getActionContextNames(self.contexts)
+        if len(contextList) >= 1:
+            ffResponse = scenarioFromJson(fileName=  paramScenarios.feelbad, param=contextList[0])
+        else:
+            ffResponse = scenarioFromJson(fileName=  paramScenarios.feelbad, param = "default")
+        self.contexts = makeContextsLifespan(self.contexts, lifespanCount=3)
+        intent = None
+        for param in self.params:
+            if "intent" in param:
+                intent = param["intent"]
+        if intent != None:
+            self.contexts = addIntentToContexts(self.contexts, intent)
+        ffResponse.addContexts(self.contexts)
         return ffResponse
 
     def generalFeelSoso(self):
@@ -230,6 +238,14 @@ class Processor():
             ffResponse = scenarioFromJson(fileName=  paramScenarios.feelsoso, param=contextList[0])
         else:
             ffResponse = scenarioFromJson(fileName=  paramScenarios.feelsoso, param = "default")
+        self.contexts = makeContextsLifespan(self.contexts, lifespanCount=3)
+        intent = None
+        for param in self.params:
+            if "intent" in param:
+                intent = param["intent"]
+        if intent != None:
+            self.contexts = addIntentToContexts(self.contexts, intent)
+        ffResponse.addContexts(self.contexts)
         return ffResponse
 
     def missionFeedback(self):
@@ -255,17 +271,19 @@ class Processor():
                 intentCount = user.intent[intent]
             else:
                 intentCount = 0
+        intentCount +=1
         ffResponse = missionFeedbackSenarioFromJson(fileName="missionFeedback", intent = intent, intentCount = intentCount)
-        user.totalCount += 1
         print("intent : {}, mission:{}, user:{}, intentCount : {}".format(intent, mission, user, intentCount))
-        if intentCount == 0:
-            user.intent[intent] = 0
+        user.totalCount += 1
+        if intentCount == 1:
+            user.intent[intent] = 1
         elif intentCount == None:
-            ffResponse.addTextReply("뭔가 이ㅇㅏㄴㅣ")
+            ffResponse.addTextReply("좋았어")
         else:
             user.intent[intent] += 1
-        # fbQuery.set_user(user)
-        ffResponse.addImageReply(url ="https://firebasestorage.googleapis.com/v0/b/reindeer-fulfillment.appspot.com/o/%E1%84%8F%E1%85%A1%E1%84%86%E1%85%A6%E1%84%85%E1%85%A1%E1%84%85%E1%85%B3%E1%86%AF%E1%84%86%E1%85%A5%E1%86%B7%E1%84%8E%E1%85%AE%E1%84%86%E1%85%A7%E1%86%AB%E1%84%8B%E1%85%A1%E1%86%AB%E1%84%83%E1%85%AB_8.png?alt=media&token=7cf24584-7ecc-434a-91d7-8c99fd7d1e18")
-        # ffResponse.dumpResponse()
-        # if mission.useStamp == True:
+        if mission.useStamp == True:
+            #TODO : FirebaseStorage TO CDN(보안)
+            ffResponse.addImageReply(url = mission.stampUrl)
+        # notDonate, donationText = getDonationText()
+
         return ffResponse

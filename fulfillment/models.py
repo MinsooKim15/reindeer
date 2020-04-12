@@ -122,7 +122,7 @@ class Stamp(object):
         )
 
 class Mission(object):
-    def __init__(self, intent, phrase, event, emotionType, actionType, category, stampUrl = "",  condition={}):
+    def __init__(self, intent, phrase, event, emotionType, actionType, category, stampUrl = "",  condition={}, notUse= False, useStamp =False ):
         self.intent = intent
         self.phrase = phrase
         self.stampUrl = stampUrl
@@ -132,11 +132,12 @@ class Mission(object):
         self.category = category
         self.condition = condition
         self.id = None
-        self.notUse = False
+        self.notUse = notUse
+        self.useStamp = useStamp
 
     @staticmethod
     def from_dict(source):
-        mission = Mission(source[u"intent"],source[u"phrase"],source[u"event"],source[u"emotionType"], source[u"actionType"],source[u"category"])
+        mission = Mission(source[u"intent"],source[u"phrase"],source[u"event"],source[u"emotionType"], source[u"actionType"],source[u"category"],source[u"notUse"],source[u"useStamp"])
         if u"condition" in source:
             mission.condition = source[u"condition"]
         else:
@@ -153,7 +154,8 @@ class Mission(object):
             u"category" : self.category,
             u"updated" : datetime.now(),
             u"notUse" : self.notUse,
-            u"event" : self.event
+            u"event" : self.event,
+            u"useStamp" : self.useStamp
         }
         if self.condtion:
             dest[u"condition"] = self.condition
@@ -166,5 +168,5 @@ class Mission(object):
         self.id = id
     def __repr__(self):
         return(
-            "Mission(id={}, intent={}, phrase={}, stampUrl ={}, emotionType={}, actionType={}, category={}, condition={}, notUse = {}, event ={})".format(self.id, self.intent, self.phrase, self.stampUrl, self.emotionType, self.actionType, self.category, self.condition, self.notUse, self.event)
+            "Mission(id={}, intent={}, phrase={}, stampUrl ={}, emotionType={}, actionType={}, category={}, condition={}, notUse = {}, event ={}, useStamp ={})".format(self.id, self.intent, self.phrase, self.stampUrl, self.emotionType, self.actionType, self.category, self.condition, self.notUse, self.event, self.useStamp)
         )

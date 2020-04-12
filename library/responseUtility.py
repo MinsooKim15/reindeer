@@ -98,6 +98,12 @@ class FulfillmentResponse():
             "name": event,
             "parameters": params
         }
+    def addButton(self,url,buttonText):
+        self.button = {
+            "type": "web_url",
+            "url" : url,
+            "buttonText" : buttonText
+        }
 
 
     # def addContexts(self, contexts):
@@ -160,8 +166,61 @@ class FulfillmentResponse():
             finalResult["followupEventInput"] = self.event
         if self.contexts !=None :
             finalResult["outputContexts"] = self.contexts
+        if self.button !=None:
+            # finalResult = {
+            #     "payload":{
+            #         "facebook":{
+            #             "attachment":{
+            #                 "type" : "template",
+            #                 "payload":{
+            #                     "template_type": "button",
+            #                     "text": "어디 들어가는 문구지",
+            #                     "buttons": [
+            #                         {
+            #                             "type": self.button["type"],
+            #                             "url": self.button["url"],
+            #                             "title": self.button["buttonText"]
+            #                         }
+            #                     ]
+            #                 }
+            #             }
+            #         }
+            #     }
+            # }
+            finalResult = {
+                "payload":{
+                    "facebook":{
+                        "attachment":{
+                            "type" : "template",
+                            "payload":{
+                                "template_type": "generic",
+                                "elements":[
+                                    {
+                                        "image_url": "http://i.011st.com/ex_t/R/450x450/1/85/1/src/cat/19/0/7/4/1/4/5/tKtNR/19074145_1.jpg",
+                                        "title": "타이틀",
+                                        "subtitle": "서브타이틀",
+                                        "default_action": {
+                                            "type": "web_url",
+                                            "url": "https://www.buymeacoffee.com/reindeer",
+                                            "webview_height_ratio": "tall"
+                                        },
+                                        "buttons": [
+                                            {
+                                                "type": self.button["type"],
+                                                "url": self.button["url"],
+                                                "title": self.button["buttonText"]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
         return finalResult
         # return self.data
+
     # def addImage(self, url):
     #     facebook = {}
     #     facebook["attachment"] = {

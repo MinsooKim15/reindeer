@@ -170,3 +170,17 @@ def getRandomMission(sid,getCount = 1,sourceService = "facebook"):
         return finalMissionList[0]
     else:
         return finalMissionList[0:getCount]
+
+def getDonationText(ffResponse):
+    with open('./scenario/donation' + ".json") as json_file:
+        jsonScenario = json.load(json_file)
+    randomList = []
+
+    for key,value in jsonScenario.values():
+        randomList += [key]*value["weight"]
+    randomKey = random.choice(randomList)
+    # if randomKey["type"] == "text":
+    #
+
+
+
