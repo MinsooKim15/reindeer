@@ -3,15 +3,38 @@
 # TODO : Input을 하나의 Agent Class로 만들기
 
 class FulfillmentResponse():
+    #Facebook Only 지향으로 만들어졌습니다. 수정하거면 전체의 수정을 해야 합니다.
+
     def __init__(self):
         self.data = {"fulfillmentText" : "",
                      "payload": {}
                 }
+        self.replyList = []
+        self.contexts = None
+        self.event = None
     def addTextReply(self, text):
-        self.data["fulfillmentText"] = text
+        # self.data["fulfillmentText"] = text
+        reply = {
+            u"type" : "text",
+            u"text" : text
+        }
+        self.replyList.append(reply)
+    def addImageReply(self, url):
+        reply = {
+            u"type" : "image",
+            u"url" : url
+        }
+        self.replyList.append(reply)
+    def addContexts(self,inputContexts):
+        if self.contexts != None:
+            for inputContext in inputContexts:
+                self.contexts.append(inputContext)
+        else:
+            self.contexts = inputContexts
+
     def dumpResponse(self):
         self.data = {
-            "fulfillmentMessages":[
+            u"fulfillmentMessages":[
                 {
                     "payload":{
                         "facebook":{
@@ -38,47 +61,117 @@ class FulfillmentResponse():
         }
         # self.data["payload"]["facebook"]["text"] = self.data["fulfillmentText"]
     def addFacebookQuickReply(self, title, quickReplyList):
-        facebook = {}
-        facebook["text"] = title
-        quickReplies = []
-        for reply in quickReplyList:
-            quickReply = {
-                "content_type": "text",
-                "title": reply,
-                "payload": "<POSTBACK_PAYLOAD>"
-            }
-            quickReplies.append(quickReply)
-
-        facebook["quick_replies"] = quickReplies
-
-        self.data["payload"]["facebook"] = facebook
+        reply = {
+            u"type": "quickReply",
+            u"title": title,
+            u"quickReplyList": quickReplyList
+        }
+        self.replyList.append(reply)
+        # facebook = {}
+        # facebook["text"] = title
+        # quickReplies = []
+        # for reply in quickReplyList:
+        #     quickReply = {
+        #         "content_type": "text",
+        #         "title": reply,
+        #         "payload": "<POSTBACK_PAYLOAD>"
+        #     }
+        #     quickReplies.append(quickReply)
+        #
+        # facebook["quick_replies"] = quickReplies
+        #
+        # self.data["payload"]["facebook"] = facebook
     def addFollowupEvent(self, event, params ={}):
         # params는 dict로 들어와야 함
-        eventDict = {
-            "name" : event,
-            "parameters" : params
+        # eventDict = {
+        #     "name" : event,
+        #     "parameters" : params
+        # }
+        # self.data["followupEventInput"] = eventDict
+
+        # reply = {
+        #     "type" : "event",
+        #     "name" : event,
+        #     "parameters": params
+        # }
+        self.event = {
+            "name": event,
+            "parameters": params
         }
-        self.data["followupEventInput"] = eventDict
-    def addContexts(self, contexts):
-        print(self.data)
-        for context in contexts:
-            if "outputContexts" in self.data.keys():
-                self.data["outputContexts"].append(context)
-            else:
-                self.data["outputContexts"] = [context]
+
+
+    # def addContexts(self, contexts):
+    #     print(self.data)
+    #     for context in contexts:
+    #         if "outputContexts" in self.data.keys():
+    #             self.data["outputContexts"].append(context)
+    #         else:
+    #             self.data["outputContexts"] = [context]
 
     def getResponse(self):
-        return self.data
-    def addImage(self, url):
-        facebook = {}
-        facebook["attachment"] = {
-            "type" : "image",
-            "payload" : {
-                "url" : url,
-                "is_reusable" : True
-            }
-        }
-        self.data["payload"]["facebook"] = facebook
+        messages = []
+        for reply in self.replyList:
+            print(reply)
+            message = {}
+            if reply[u"type"] == "text":
+                message = {
+                    "payload":{
+                        "facebook":{
+                            "text": reply[u"text"]
+                        }
+                    }
+                }
+            elif reply[u"type"] == "image":
+                message = {
+                    "payload":{
+                        "facebook":{
+                            "attachment": {
+                                "type": "image",
+                                "payload": {
+                                    "url": reply["url"],
+                                    "is_reusable": True
+                                }
+                            }
+                        }
+                    }
+                }
+            elif reply[u"type"] == "quickReply":
+                facebook = {}
+                facebook["text"] = reply["title"]
+                facebook["quick_replies"] = []
+                for quickReply in reply["quickReplyList"]:
+                    qr = {
+                        "content_type" : "text",
+                        "title" : quickReply,
+                        "payload": "<POSTBACK_PAYLOAD>"
+                    }
+                    facebook["quick_replies"].append(qr)
+
+                message = {
+                    "payload": {
+                        "facebook": facebook
+                    }
+                }
+            messages.append(message)
+        finalResult = {}
+        if len(messages) > 0:
+            finalResult["fulfillmentMessages"] = messages
+        if self.event != None:
+            finalResult["followupEventInput"] = self.event
+        if self.contexts !=None :
+            finalResult["outputContexts"] = self.contexts
+        return finalResult
+        # return self.data
+    # def addImage(self, url):
+    #     facebook = {}
+    #     facebook["attachment"] = {
+    #         "type" : "image",
+    #         "payload" : {
+    #             "url" : url,
+    #             "is_reusable" : True
+    #         }
+    #     }
+    #     self.data["payload"]["facebook"] = facebook
 
 
 
