@@ -9,11 +9,8 @@
     "replies" : ["좋아", "다음에 하자"]
   },
   "default" : {
-    "type" : "randomText",
-    "textList" : [
-      "무슨 말인지 잘 모르겠어",
-      "으음??",
-      "잘 모르겠어ㅜ"
-    ]
+    "type" : "quickReplies",
+    "text" : "그치그치? 다행이다",
+    "replies" : ["응"]
   }
 }
