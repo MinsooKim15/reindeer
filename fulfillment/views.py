@@ -21,8 +21,7 @@ import pathlib
 from firebase_admin import storage
 path = str(pathlib.Path().absolute())
 # cred = credentials.Certificate(os.environ.get("FIREBASE_TOKEN"))
-default_app = firebase_admin.initialize_app({
-    credentials: firebase_admin.credentials.Certificate({
+cred = credentials.Certificate({
       "type": "service_account",
       "project_id": "reindeer-fulfillment",
       "private_key_id": os.environ.get("FIREBASE_PRIVATE_KEY_ID"),
@@ -33,8 +32,8 @@ default_app = firebase_admin.initialize_app({
       "token_uri": "https://oauth2.googleapis.com/token",
       "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
       "client_x509_cert_url": os.environ.get("FIREBASE_CLIENT_CERT_URI")
-    })
 })
+default_app = firebase_admin.initialize_app(cred)
 
 paramEvents = Events()
 paramActions = Actions()
