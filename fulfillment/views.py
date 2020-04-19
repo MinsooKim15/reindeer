@@ -22,7 +22,7 @@ from firebase_admin import storage
 path = str(pathlib.Path().absolute())
 serviceAccount = os.environ.get("FIREBASE_TOKEN")
 # cred = credentials.Certificate(os.environ.get("FIREBASE_TOKEN"))
-default_app = firebase_admin.initialize_app({credentials: firebase_admin.credentials.certificate(json.loads(serviceAccount))})
+default_app = firebase_admin.initialize_app({credentials: firebase_admin.credentials.Certificate(json.loads(serviceAccount))})
 
 
 paramEvents = Events()
