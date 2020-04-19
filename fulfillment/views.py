@@ -3,6 +3,7 @@ from django.http import HttpResponse, JsonResponse
 #import csrf from CSRF protection
 from django.views.decorators.csrf import csrf_exempt
 #import df_library
+import os
 from library.df_response_lib import *
 #import json to get json request
 import json
@@ -19,7 +20,7 @@ from firebase_admin import firestore
 import pathlib
 from firebase_admin import storage
 path = str(pathlib.Path().absolute())
-cred = credentials.Certificate(path + '/environment/reindeer-fulfillment-firebase-adminsdk-cwcle-f6101f3cf3.json')
+cred = credentials.Certificate(os.environ.get("FIREBASE_TOKEN"))
 default_app = firebase_admin.initialize_app(cred)
 
 
@@ -35,15 +36,12 @@ def home(request):
 @csrf_exempt
 def webhook(request):
     isNew = False
-    verifyToken = None
+    verifyToken = os.environ.get("FULFILLMENT_TOKEN")
     requestToken = request.headers["Fulfilllment-Token"]
     print(request.headers)
-    with open('./environment/token.json') as json_file:
-        tokens = json.load(json_file)
-        verifyToken = tokens["fulfilllment-token"]
-
     if requestToken != verifyToken:
         raise PermissionDenied
+
 
 
     req = json.loads(request.body)
