@@ -20,10 +20,15 @@ from firebase_admin import firestore
 import pathlib
 from firebase_admin import storage
 path = str(pathlib.Path().absolute())
-serviceAccount = os.environ.get("FIREBASE_TOKEN")
+privateKey = os.environ.get("FIREBASE_PRIVATE_KEY")
+clientEmail = os.environ.get("FIREBASE_CLIENT_EMAIL")
 # cred = credentials.Certificate(os.environ.get("FIREBASE_TOKEN"))
-default_app = firebase_admin.initialize_app({credentials: firebase_admin.credentials.Certificate(json.loads(serviceAccount))})
-
+default_app = firebase_admin.initialize_app({
+    credentials: firebase_admin.credentials.Certificate({
+        "private_key" : privateKey,
+        "client_email": clientEmail
+    })
+});
 
 paramEvents = Events()
 paramActions = Actions()
