@@ -12,6 +12,8 @@ class FulfillmentResponse():
         self.replyList = []
         self.contexts = None
         self.event = None
+        self.button = None
+        self.contexts = None
     def addTextReply(self, text):
         # self.data["fulfillmentText"] = text
         reply = {
@@ -106,13 +108,10 @@ class FulfillmentResponse():
         }
 
 
-    # def addContexts(self, contexts):
+    def addContexts(self, contexts):
+        self.contexts = contexts
     #     print(self.data)
-    #     for context in contexts:
-    #         if "outputContexts" in self.data.keys():
-    #             self.data["outputContexts"].append(context)
-    #         else:
-    #             self.data["outputContexts"] = [context]
+
 
     def getResponse(self):
         messages = []
@@ -160,6 +159,7 @@ class FulfillmentResponse():
                 }
             messages.append(message)
         finalResult = {}
+        print(finalResult)
         if len(messages) > 0:
             finalResult["fulfillmentMessages"] = messages
         if self.event != None:
@@ -218,6 +218,11 @@ class FulfillmentResponse():
                     }
                 }
             }
+        if self.contexts != None:
+            finalResult["outputContexts"] = self.contexts
+
+        print("ffResponse Return함.")
+        print(finalResult)
         return finalResult
         # return self.data
 

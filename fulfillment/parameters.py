@@ -7,6 +7,7 @@ class Actions:
         self.newMission = "general.newMission"
         self.missionFeedback = "mission.feedback"
         self.selectMission = "general.selectMission" #이거 안필요할듯 수정하자
+        self.missiondoodleGiveImage = "mission.doodle_giveImage"
         #요거는 Mission 다음에 하겠다고 하면!
         self.later = "later" # lastIntent parameter 값을 쓰자
         self.fallback = "input.unknown"

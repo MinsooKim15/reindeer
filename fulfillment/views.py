@@ -11,6 +11,7 @@ from library.responseUtility import *
 from library.utility import *
 import json
 import random
+from django.core.exceptions import PermissionDenied
 
 import firebase_admin
 from firebase_admin import credentials
@@ -34,6 +35,17 @@ def home(request):
 @csrf_exempt
 def webhook(request):
     isNew = False
+    verifyToken = None
+    requestToken = request.headers["Fulfilllment-Token"]
+    print(request.headers)
+    with open('./environment/token.json') as json_file:
+        tokens = json.load(json_file)
+        verifyToken = tokens["fulfilllment-token"]
+
+    if requestToken != verifyToken:
+        raise PermissionDenied
+
+
     req = json.loads(request.body)
     print("Request ------------")
     print(req)
@@ -97,22 +109,24 @@ def webhook(request):
         ffResponse = processor.generalSelectMission()
     if action == paramActions.fallback:
         ffResponse = processor.generalFallback()
-    if action == paramActions.later:
-        ffResponse = processor.later()
-
-    # General 소감 표현을 처음 받았을 때의 처리
-    if action == paramActions.feelGood:
-        ffResponse = processor.generalFeelGood()
-    if action == paramActions.feelBad:
-        ffResponse = processor.generalFeelBad()
-    if action == paramActions.feelSoso:
-        ffResponse = processor.generalFeelSoso()
-
-
-    # 미션이 종료하고 최종 피드백을 한다. Param에 들어있는 Intent를 Firebase로 날려 처리한다.
-    if action == paramActions.missionFeedback:
-       ffResponse = processor.missionFeedback()
-
+        print("generalFallback 종료")
+    # if action == paramActions.later:
+    #     ffResponse = processor.later()
+    #
+    # # General 소감 표현을 처음 받았을 때의 처리
+    # if action == paramActions.feelGood:
+    #     ffResponse = processor.generalFeelGood()
+    # if action == paramActions.feelBad:
+    #     ffResponse = processor.generalFeelBad()
+    # if action == paramActions.feelSoso:
+    #     ffResponse = processor.generalFeelSoso()
+    #
+    #
+    # # 미션이 종료하고 최종 피드백을 한다. Param에 들어있는 Intent를 Firebase로 날려 처리한다.
+    # if action == paramActions.missionFeedback:
+    #    ffResponse = processor.missionFeedback()
+    # if action == "choose.community":#임시임.
+    #     ffResponse = processor.missionChooseCommunity()
 
     finalResponse = ffResponse.getResponse()
     print("RESPONSE-----------------")
@@ -166,8 +180,8 @@ class Processor():
 
     def generalFallback(self):
         #TODO : Context가 2번 이상 유지 되지 않는 문제가 있음, Outputcontext를 추가하자
+        print("generalFallback 진입")
         ffResponse = FulfillmentResponse()
-
         with open('./scenario/fallback.json') as json_file:
             fallbackScenario = json.load(json_file)
         contextList  = getActionContextNames(self.contexts)
@@ -175,8 +189,11 @@ class Processor():
             ffResponse = scenarioFromJson(fileName = "fallback", param = contextList[0])
         else:
             ffResponse = scenarioFromJson(fileName = "fallback", param = "default")
+        print(len(self.contexts))
         self.contexts = makeContextsLifespan(self.contexts, lifespanCount= 3)
+        print(len(self.contexts))
         ffResponse.addContexts(contexts = self.contexts)
+        print("generalFallback 종료")
         return ffResponse
 
     def generalSelectMission(self):
@@ -286,4 +303,18 @@ class Processor():
             ffResponse.addImageReply(url = mission.stampUrl)
         # notDonate, donationText = getDonationText()
 
+        return ffResponse
+    def missionChooseCommunity(self):
+        param = None
+        if self.params:
+            if u"taget-commuinity-them" in self.params:
+                param = self.params[u"taget-commuinity-them"]
+            else:
+                param = "nothing"
+        else:
+            param = "nothing"
+
+        ffResponse = scenarioFromJson(fileName = "chooseCommunity", param =  param)
+        ffResponse.addTextReply("그럼 오늘은 신청이나 등록 같은거 까지만 해보자")
+        ffResponse.addFacebookQuickReply(title = "한번에 나가는 건 큰 결심이지만, 등록 같은건 금방 해볼 수 있자나",quickReplyList=["그러자"])
         return ffResponse
