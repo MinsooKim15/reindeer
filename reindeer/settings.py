@@ -28,8 +28,9 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', '"YOUR_SECREY_KEY")YOUR_SECREY_
 DEBUG = False
 
 ALLOWED_HOSTS = [
-    "9bfb7efa.ngrok.io",
+    "d6bfe6e2.ngrok.io",
     "127.0.0.1",
+    "0.0.0.0",
     ".herokuapp.com"
 ]
 
@@ -44,7 +45,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'fulfillment',
-
 ]
 
 MIDDLEWARE = [
