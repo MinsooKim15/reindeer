@@ -25,6 +25,7 @@ clientEmail = os.environ.get("FIREBASE_CLIENT_EMAIL")
 # cred = credentials.Certificate(os.environ.get("FIREBASE_TOKEN"))
 default_app = firebase_admin.initialize_app({
     credentials: firebase_admin.credentials.Certificate({
+        "type" : "service_account",
         "private_key" : privateKey,
         "client_email": clientEmail
     })
