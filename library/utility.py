@@ -5,6 +5,7 @@ import requests
 from fulfillment.querys import *
 from fulfillment.models import *
 import random
+import os
 
 
 def checkContext(target, contexts):
@@ -23,6 +24,57 @@ def getActionContextNames(contexts):
         if (contextName != "generic") & (contextName != "__system_counters__"):
             contextList.append(contextName)
     return contextList
+
+def fallbackScenraioFromJson(fileName,contextList):
+    with open('./scenario/'+fileName + ".json") as json_file:
+        jsonScenario = json.load(json_file)
+    keys = jsonScenario.keys()
+    selectedKey = None
+    if len(contextList) >=1:
+        for key in keys:
+            if selectedKey != None:
+                break
+            for context in contextList:
+                if key == context:
+                    selectedKey = key
+                    break
+    if selectedKey != None:
+        scenario = jsonScenario[selectedKey]
+    else:
+        scenario = jsonScenario["default"]
+    ffResponse = scenarioToResponse(scenario)
+    return ffResponse
+# def getRecentContexts(contexts):
+#     selectedContext = None
+#     if len(contexts) >=1:
+#         for context in contexts:
+#             #변수 설정
+#             contextName = context["name"].split("/")[-1]
+#             lifeSpanCount = None
+#             if 'lifespanCount' in context:
+#                 lifeSpanCount = context["lifespanCount"]
+#             lifeSpanChanged = False
+#             if 'parameters' in context:
+#                 if u"lifeSpanChanged" in context[u"parameters"]:
+#                     lifeSpanChanged = True
+#
+#             if (contextName != "generic") & (contextName != "__system_counters__"):
+#                 pass
+#             if lifeSpanChanged:
+#                 pass
+#             if selectedContext == None:
+#                 selectedContext = {"names": [contextName], "count": lifeSpanCount}
+#             else:
+#                 if lifeSpanCount == selectedContext["count"]:
+#                     selectedContext["names"].append(contextName)
+#                 elif lifeSpanCount > selectedContext["count"]:
+#                     selectedContext = {"names": [contextName], "count": lifeSpanCount}
+#
+#     if selectedContext!=None:
+#         return selectedContext["names"]
+#     else:
+#         return None
+
 
 
 
@@ -72,7 +124,7 @@ def scenarioToResponse(scenario):
     return ffResponse
 
 def getFBUserData(sid):
-    page_access_token = "EAAJH9hLZCkRwBAC0OrxNxl97pah1Rq6a7gW9ZCN6uS9KQRGjBZA3al1hw2EaDppGWApgbjW0Xfh5WOUSw9sujZBCEVhxFCHcF85hUMh1BYyAiHNSIc76HsCZA0G0oQdQUusZBPbzgXkqkYWRCMjCi1cIqD72jh4ettysnORZBW1NDuZA60lCD0KMhpr9FsyEVU0ZD"
+    page_access_token = os.environ.get("FACEBOOK_PAGE_ACCESS_TOKEN")
     URL = "https://graph.facebook.com/" + sid + "?fields=first_name,last_name,profile_pic&access_token=" + page_access_token
     response_fb = requests.get(URL)
     resFbJson= response_fb.json()
@@ -140,6 +192,7 @@ def makeNewUserAndGet(sid,sourceService,countOne = True, intent=None, stamp = No
             )
     fbQuery = FirebaseQuery()
     fbQuery.set_user(user)
+    print(user)
     return user
 
 def getRandomIntent(sid):
@@ -181,6 +234,13 @@ def getDonationText(ffResponse):
     randomKey = random.choice(randomList)
     # if randomKey["type"] == "text":
     #
-
+def getIntentFromContexts(contexts):
+    intent = None
+    for context in contexts:
+        print(context)
+        if "parameters" in context:
+            if "intent" in context["parameters"]:
+                intent = context["parameters"]["intent"]
+    return intent
 
 

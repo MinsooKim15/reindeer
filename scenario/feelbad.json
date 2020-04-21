@@ -1,19 +1,27 @@
 {
-  "missionbreath_inhale-followup" : {
-    "type" : "text",
-    "text" : "들이 마시고 나면 '들이마셨어'라고 알려줘"
-  },
-  "missionbreath-followup" : {
+  "mission.walk" : {
     "type" : "quickReplies",
-    "text" : "좋아, 싫어 처럼 답변 해줘",
-    "replies" : ["좋아", "다음에 하자"]
+    "text" : "음.. 그럼 다른 걸 해보자, 잘 안 맞는 활동을 알아가는 것도 좋은 일야",
+    "replies" : ["응"]
+  },
+  "mission.go.library" : {
+    "type" : "quickReplies",
+    "text" : "그렇군 ㅜ 재밌을 줄 알았는데, 다음에는 다른 걸 해보자",
+    "replies" : ["응"]
+  },
+  "mission.buy.book" : {
+    "type" : "quickReplies",
+    "text" : "그래그래 다음에는 새로운 걸 해보자",
+    "replies" : ["응"]
+  },
+  "mission.breath" : {
+    "type" : "quickReplies",
+    "text" : "그렇군 ㅜ 다음에는 좀 더 마음의 긴장을 풀 수 있는 걸 해보자",
+    "replies" : ["응"]
   },
   "default" : {
-    "type" : "randomText",
-    "textList" : [
-      "무슨 말인지 잘 모르겠어",
-      "으음??",
-      "잘 모르겠어ㅜ"
-    ]
+    "type" : "quickReplies",
+    "text" : "엇 그렇군ㅜ 다음에는 더 좋은 걸 해보자",
+    "replies" : ["응"]
   }
 }

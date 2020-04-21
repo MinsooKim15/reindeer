@@ -157,7 +157,9 @@ class FulfillmentResponse():
                         "facebook": facebook
                     }
                 }
+            print(message)
             messages.append(message)
+        print("messages:", messages)
         finalResult = {}
         print(finalResult)
         if len(messages) > 0:

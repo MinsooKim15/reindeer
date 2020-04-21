@@ -40,4 +40,4 @@ class Scenarios:
         self.fallback = "fallback"
         self.feelgood = "feelgood"
         self.feelbad = "feelbad"
-        self.fellsoso = "feelsoso"
+        self.feelsoso = "feelsoso"

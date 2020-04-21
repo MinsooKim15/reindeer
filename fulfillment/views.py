@@ -19,8 +19,26 @@ from firebase_admin import credentials
 from firebase_admin import firestore
 import pathlib
 from firebase_admin import storage
+import logging
+import inspect
+
+path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+mainLogger = logging.getLogger("fulfillment")
+mainLogger.setLevel(logging.INFO)
+streamHandler = logging.StreamHandler()
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+streamHandler.setFormatter(formatter)
+mainLogger.addHandler(streamHandler)
+fileHandler = logging.FileHandler(path + "/main.log")
+fileHandler.setFormatter(formatter)
+mainLogger.addHandler(fileHandler)
+
+
+
 path = str(pathlib.Path().absolute())
 # cred = credentials.Certificate(os.environ.get("FIREBASE_TOKEN"))
+
+print(os.environ.get("FIREBASE_PRIVATE_KEY_ID"))
 cred = credentials.Certificate({
       "type": "service_account",
       "project_id": "reindeer-fulfillment",
@@ -52,10 +70,8 @@ def webhook(request):
     print(request.headers)
     if requestToken != verifyToken:
         raise PermissionDenied
-
-
-
     req = json.loads(request.body)
+    mainLogger.info({"request":req})
     print("Request ------------")
     print(req)
     action = req.get('queryResult').get('action')
@@ -65,7 +81,11 @@ def webhook(request):
     contextList = []
     projectId = contexts[0]["name"].split("/")[1]
     session = contexts[0]["name"].split("/")[4]
-    sid = req.get('originalDetectIntentRequest').get('payload').get('data').get('sender').get('id')
+    payload = req.get('originalDetectIntentRequest').get('payload')
+    if "data" in payload:
+        sid = payload.get('data').get('sender').get('id')
+    else:
+        sid = None
 
     # projectData = {
     #     "projectId" : projectId,
@@ -79,8 +99,19 @@ def webhook(request):
         session=session,
         sid = sid,
     )
-
+    contextList = []
+    for context in contexts:
+        contextName = context["name"].split("/")[-1]
+        if 'lifespanCount' in context:
+            count = context["lifespanCount"]
+        else:
+            count = 0
+        addingContext = {"contextName": contextName, "count": count}
+        contextList.append(addingContext)
+    mainLogger.info({"contextList": contextList})
     # TODO : Suggestion Chips 로직을 참고해, User 정보를 다루는 구성을 만들자
+
+    ffResponse = FulfillmentResponse()#그냥 놓친 action으로 인한 에러를 막기 위함.
 
     if action == "get_suggestion_chips":
 
@@ -119,27 +150,28 @@ def webhook(request):
     if action == paramActions.fallback:
         ffResponse = processor.generalFallback()
         print("generalFallback 종료")
-    # if action == paramActions.later:
-    #     ffResponse = processor.later()
-    #
-    # # General 소감 표현을 처음 받았을 때의 처리
-    # if action == paramActions.feelGood:
-    #     ffResponse = processor.generalFeelGood()
-    # if action == paramActions.feelBad:
-    #     ffResponse = processor.generalFeelBad()
-    # if action == paramActions.feelSoso:
-    #     ffResponse = processor.generalFeelSoso()
-    #
-    #
-    # # 미션이 종료하고 최종 피드백을 한다. Param에 들어있는 Intent를 Firebase로 날려 처리한다.
-    # if action == paramActions.missionFeedback:
-    #    ffResponse = processor.missionFeedback()
-    # if action == "choose.community":#임시임.
-    #     ffResponse = processor.missionChooseCommunity()
+    if action == paramActions.later:
+        ffResponse = processor.later()
+
+    # General 소감 표현을 처음 받았을 때의 처리
+    if action == paramActions.feelGood:
+        ffResponse = processor.generalFeelGood()
+    if action == paramActions.feelBad:
+        ffResponse = processor.generalFeelBad()
+    if action == paramActions.feelSoso:
+        ffResponse = processor.generalFeelSoso()
+
+
+    # 미션이 종료하고 최종 피드백을 한다. Param에 들어있는 Intent를 Firebase로 날려 처리한다.
+    if action == paramActions.missionFeedback:
+       ffResponse = processor.missionFeedback()
+    if action == "choose.community":#임시임.
+        ffResponse = processor.missionChooseCommunity()
 
     finalResponse = ffResponse.getResponse()
     print("RESPONSE-----------------")
     print(finalResponse)
+    mainLogger.info({"response": finalResponse})
     return JsonResponse(finalResponse, safe = False)
 
 class Processor():
@@ -151,7 +183,7 @@ class Processor():
         self.session = session
         self.sid = sid
     def generalWelcome(self):
-        userNew, user = checkNewAndGetUser(sid = self.sid,sourceService = "facebook")
+        userNew, user = checkNewAndGetUser(sid = self.sid, sourceService = "facebook")
         ffResponse = FulfillmentResponse()
         if userNew:
             ffResponse.addFollowupEvent(event = paramEvents.tutorial)
@@ -178,10 +210,15 @@ class Processor():
     def generalNewMission(self):
         ffResponse = FulfillmentResponse()
         # TODO : Firebase 호출해, Random하게 1개의 Mission을 Event로 돌려준다.
-        isNew, user = checkNewAndGetUser()
+        isNew, user = checkNewAndGetUser(sid=self.sid, sourceService="facebook")
+        print(isNew)
+        print(user)
+
         if isNew:
             user = makeNewUserAndGet(self.sid, sourceService="facebook", countOne = False)
-        mission = getRandomMission(self.sid, getCount = 1)
+            mission = getRandomMission(self.sid, getCount=1)
+        else:
+            mission = getRandomMission(self.sid, getCount = 1)
         print("최종 event")
         print(mission.event)
         ffResponse.addFollowupEvent(event = mission.event)
@@ -191,13 +228,10 @@ class Processor():
         #TODO : Context가 2번 이상 유지 되지 않는 문제가 있음, Outputcontext를 추가하자
         print("generalFallback 진입")
         ffResponse = FulfillmentResponse()
-        with open('./scenario/fallback.json') as json_file:
-            fallbackScenario = json.load(json_file)
         contextList  = getActionContextNames(self.contexts)
-        if len(contextList) >= 1:
-            ffResponse = scenarioFromJson(fileName = "fallback", param = contextList[0])
-        else:
-            ffResponse = scenarioFromJson(fileName = "fallback", param = "default")
+
+        ffResponse = fallbackScenraioFromJson(fileName="fallback", contextList= contextList)
+
         print(len(self.contexts))
         self.contexts = makeContextsLifespan(self.contexts, lifespanCount= 3)
         print(len(self.contexts))
@@ -207,7 +241,7 @@ class Processor():
 
     def generalSelectMission(self):
         ffResponse = FulfillmentResponse()
-        isNew, user = checkNewAndGetUser()
+        isNew, user = checkNewAndGetUser(sid=self.sid, sourceService="facebook")
         if isNew:
             user = makeNewUserAndGet(self.sid, sourceService="facebook", countOne = False)
         missionList = getRandomMission(self.sid, getCount = 3)
@@ -223,55 +257,45 @@ class Processor():
         return ffResponse
 
     def generalFeelGood(self):
-        # TODO: 기분 측정시 전달 받은 Context리스트를 그대로 밀어 넣자
+        # TODO : 그냥 뜸근없이 유입된 경우 대비 시나리오 추가
 
         contextList = getActionContextNames(self.contexts)
         # 임시테스트
-        if len(contextList) >= 1:
-            ffResponse = scenarioFromJson(fileName= paramScenarios.feelgood, param=contextList[0])
+        intent = getIntentFromContexts(self.contexts)
+        print(intent)
+        if intent != None:
+            ffResponse = scenarioFromJson(fileName= paramScenarios.feelgood, param= intent)
         else:
             ffResponse = scenarioFromJson(fileName= paramScenarios.feelgood, param = "default")
-        self.contexts = makeContextsLifespan(self.contexts, lifespanCount=3)
-        intent = None
-        for param in self.params:
-            if "intent" in param:
-                intent = param["intent"]
-        if intent != None:
-            self.contexts = addIntentToContexts(self.contexts, intent)
-        ffResponse.addContexts(self.contexts)
-        ffResponse.addButton(url = "https://www.buymeacoffee.com/reindeer",buttonText = "레인디어 후원하기")
+        # self.contexts = makeContextsLifespan(self.contexts, lifespanCount=3)
+        # print(ffResponse.replyList)
+        #
+        # if intent != None:
+        #     self.contexts = addIntentToContexts(self.contexts, intent)
+        # ffResponse.addContexts(self.contexts)
+        # ffResponse.addButton(url = "https://www.buymeacoffee.com/reindeer",buttonText = "레인디어 후원하기")
         return ffResponse
 
     def generalFeelBad(self):
-        contextList = getActionContextNames(self.contexts)
-        if len(contextList) >= 1:
-            ffResponse = scenarioFromJson(fileName=  paramScenarios.feelbad, param=contextList[0])
-        else:
-            ffResponse = scenarioFromJson(fileName=  paramScenarios.feelbad, param = "default")
-        self.contexts = makeContextsLifespan(self.contexts, lifespanCount=3)
-        intent = None
-        for param in self.params:
-            if "intent" in param:
-                intent = param["intent"]
+        # TODO : 그냥 뜸근없이 유입된 경우 대비 시나리오 추가
+        intent = getIntentFromContexts(self.contexts)
+        print(intent)
+        mainLogger.info({"intent":intent})
         if intent != None:
-            self.contexts = addIntentToContexts(self.contexts, intent)
-        ffResponse.addContexts(self.contexts)
+            ffResponse = scenarioFromJson(fileName= paramScenarios.feelbad, param= intent)
+        else:
+            ffResponse = scenarioFromJson(fileName= paramScenarios.feelbad, param = "default")
         return ffResponse
 
     def generalFeelSoso(self):
-        contextList = getActionContextNames(self.contexts)
-        if len(contextList) >= 1:
-            ffResponse = scenarioFromJson(fileName=  paramScenarios.feelsoso, param=contextList[0])
-        else:
-            ffResponse = scenarioFromJson(fileName=  paramScenarios.feelsoso, param = "default")
-        self.contexts = makeContextsLifespan(self.contexts, lifespanCount=3)
-        intent = None
-        for param in self.params:
-            if "intent" in param:
-                intent = param["intent"]
+        # TODO : 그냥 뜸근없이 유입된 경우 대비 시나리오 추가
+        intent = getIntentFromContexts(self.contexts)
+        print("this is intent============")
+        print(intent)
         if intent != None:
-            self.contexts = addIntentToContexts(self.contexts, intent)
-        ffResponse.addContexts(self.contexts)
+            ffResponse = scenarioFromJson(fileName= paramScenarios.feelsoso, param= intent)
+        else:
+            ffResponse = scenarioFromJson(fileName= paramScenarios.feelsoso, param = "default")
         return ffResponse
 
     def missionFeedback(self):
@@ -281,12 +305,7 @@ class Processor():
         mission = None
         user = None
         intentCount = None
-        for context in self.contexts:
-            print("------")
-            print(context)
-            if u"intent" in context[u"parameters"]:
-                print("param 있네")
-                intent = context[u"parameters"][u"intent"]
+        intent = getIntentFromContexts(self.contexts)
         if intent != None:
             print("intent는 NONE이 아님")
             fbQuery = FirebaseQuery()

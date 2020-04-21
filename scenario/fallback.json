@@ -1,4 +1,197 @@
 {
+  "missiondecoratedesk_done-followup": {
+    "type" : "quickReplies",
+    "text" : "보여줄만한 사진 있어?",
+    "replies": ["사진 있어", "사진은 없어"]
+  },
+  "missiondecoratedesk_done-followup": {
+    "type" : "quickReplies",
+    "text" : "보여줄만한 사진 있어?",
+    "replies": ["사진 있어", "사진은 없어"]
+  },
+  "missiondecoratedesk_yes-custom-followup": {
+    "type" : "quickReplies",
+    "text" : "끝나면 알려줘",
+    "replies": ["다 끝났어"]
+  },
+  "missiondecoratedesk_yes-custom-followup": {
+    "type" : "quickReplies",
+    "text" : "끝나면 알려줘",
+    "replies": ["다 끝났어"]
+  },
+  "missiondecoratedesk_yes-followup": {
+    "type" : "quickReplies",
+    "text" : "그러면 정리를 해보자 '그럴게'라고 말하면 미션을 이어갈 수 있어",
+    "replies": ["그럴게"]
+  },
+  "missiondoodle-gotImage-followup": {
+    "type" : "quickReplies",
+    "text" : "가끔 그리기하자, 미션을 마무리하려면 '그래'라고 말해줘",
+    "replies": ["그래"]
+  },
+  "missiondoodle-yes-followup": {
+    "type" : "text",
+    "text" : "다 그리면 보내줘~"
+  },
+  "missiondrinkwater_done-followup": {
+    "type" : "quickReplies",
+    "text" : "이제 미션 마무리하려면 그럴게라고 말해줘",
+    "replies": ["그럴게"]
+  },
+  "missiondrinkwater_yes-followup": {
+    "type" : "quickReplies",
+    "text" : "다녀오면 알려줘",
+    "replies": ["다 했어"]
+  },
+  "missionrun_noImage-followup": {
+    "type" : "quickReplies",
+    "text" : "이제 미션 마무리하려면 '응'이라고 말해줘",
+    "replies": ["응"]
+  },
+  "missionrun_done-yes-custom-followup": {
+    "type" : "quickReplies",
+    "text" : "잘 간직해두자 이제 미션 마무리하려면 '응'이라고 말해줘",
+    "replies": ["응"]
+  },
+  "missionrun_done-yes-followup": {
+    "type" : "text",
+    "text" : "사진을 보내줄래?"
+  },
+  "missionrun_done-followup": {
+    "type" : "quickReplies",
+    "text" : "사진 남긴거 있으면 보여줄래?",
+    "replies": ["사진 있어", "사진은 없어"]
+  },
+  "missionrun_done-followup": {
+    "type" : "quickReplies",
+    "text" : "사진 남긴거 있으면 보여줄래?",
+    "replies": ["사진 있어", "사진은 없어"]
+  },
+  "missionrun_yes_custom-followup": {
+    "type" : "quickReplies",
+    "text" : "끝나면 알려줘",
+    "replies": ["다 끝났어"]
+  },
+  "missionrun_yes-followup": {
+    "type" : "quickReplies",
+    "text" : "그럼 가볍게 뛰고 오자",
+    "replies": ["그러자"]
+  },
+  "missiontrygathernew_gotImage-followup": {
+    "type" : "quickReplies",
+    "text" : "등록도 잘 마쳤네",
+    "replies": ["응"]
+  },
+  "missiontrygathernew_hasImage-followup": {
+    "type" : "quickReplies",
+    "text" : "사진 보내줄래? 사진을 보내기 싫으면 아니라고 말해줘",
+    "replies": ["아니"]
+  },
+  "missiontrygathernew_noImage-followup": {
+    "type" : "quickReplies",
+    "text" : "잘 끝냈네",
+    "replies": ["응"]
+  },
+  "missiontrygathernew_done-followup": {
+    "type" : "quickReplies",
+    "text" : "사진 같은 거 있으면 보고 싶어",
+    "replies": ["사진 있지", "사진은 따로 없어"]
+  },
+  "missiontrygathernew_yes-custom-custom-followup": {
+    "type" : "quickReplies",
+    "text" : "끝나면 알려줘~",
+    "replies": ["등록했어"]
+  },
+  "missiontrygathernew_yes-custom-followup": {
+    "type" : "quickReplies",
+    "text" : "등록만 오늘 끝내보자",
+    "replies": ["그러자"]
+  },
+  "missiontrygathernew_yes-followup": {
+    "type" : "quickReplies",
+    "text" : "미안해 잘 모르겠어ㅜ 그럼 어떤 모임에 나갈지 아래에서 골라줄래?",
+    "replies": ["영화 모임", "독서 모임", "러닝 크루", "다른 거"]
+  },
+  "missionwalk_done-followup": {
+    "type" : "quickReplies",
+    "text" : "기분이 어땠는지 알려줘",
+    "replies": ["좋았어", "그저 그랬어", "별로야"]
+  },
+  "missionwalk_yes-followup": {
+    "type" : "quickReplies",
+    "text" : "끝나고 나면 알려줘",
+    "replies": ["다 했어"]
+  },
+  "missionwritediarynew_done-followup": {
+    "type" : "quickReplies",
+    "text" : "나중엔 꺼내 보기로 해",
+    "replies": ["그럴게"]
+  },
+  "missionwritediarynew_done-followup": {
+    "type" : "quickReplies",
+    "text" : "나중엔 꺼내 보기로 해",
+    "replies": ["그럴게"]
+  },
+  "missionwritediarynew-yes-followup": {
+    "type" : "quickReplies",
+    "text" : "다 적고 나면 알려줘",
+    "replies": ["다 적었어"]
+  },
+  "missionbreath-followup": {
+    "type" : "quickReplies",
+    "text" : "시작할까? 아니면 다음에 할까?",
+    "replies": ["그래", "다음에 할래"]
+  },
+  "missionbuybook-followup": {
+    "type" : "quickReplies",
+    "text" : "시작할까? 아니면 다음에 할까?",
+    "replies": ["그래", "다음에 할래"]
+  },
+  "missionclean-followup": {
+    "type" : "quickReplies",
+    "text" : "시작할까? 아니면 다음에 할까?",
+    "replies": ["그래", "다음에 할래"]
+  },
+  "missiondecoratedesk-followup": {
+    "type" : "quickReplies",
+    "text" : "시작할까? 아니면 다음에 할까?",
+    "replies": ["그래", "다음에 할래"]
+  },
+  "missiondoodle-followup": {
+    "type" : "quickReplies",
+    "text" : "시작할까? 아니면 다음에 할까?",
+    "replies": ["그래", "다음에 할래"]
+  },
+  "missiondrinkwater-followup": {
+    "type" : "quickReplies",
+    "text" : "시작할까? 아니면 다음에 할까?",
+    "replies": ["그래", "다음에 할래"]
+  },
+  "missiongolibrary-followup": {
+    "type" : "quickReplies",
+    "text" : "시작할까? 아니면 다음에 할까?",
+    "replies": ["그래", "다음에 할래"]
+  },
+  "missionrun-followup": {
+    "type" : "quickReplies",
+    "text" : "시작할까? 아니면 다음에 할까?",
+    "replies": ["그래", "다음에 할래"]
+  },
+  "missiontrygathernew-followup": {
+    "type" : "quickReplies",
+    "text" : "시작할까? 아니면 다음에 할까?",
+    "replies": ["그래", "다음에 할래"]
+  },
+  "missionwritediarynew-followup": {
+    "type" : "quickReplies",
+    "text" : "시작할까? 아니면 다음에 할까?",
+    "replies": ["그래", "다음에 할래"]
+  },
+  "missionwalk-followup": {
+    "type" : "quickReplies",
+    "text" : "시작할까? 아니면 다음에 할까?",
+    "replies": ["그래", "다음에 할래"]
+  },
   "missionbreath_inhale-followup" : {
     "type" : "text",
     "text" : "들이 마시고 나면 '들이마셨어'라고 알려줘"

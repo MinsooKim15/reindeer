@@ -24,13 +24,13 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', '"YOUR_SECREY_KEY")YOUR_SECREY_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = True
-DEBUG = False
+DEBUG = True
+# DEBUG = False
 
 ALLOWED_HOSTS = [
-    "d6bfe6e2.ngrok.io",
+    "64b5b499.ngrok.io",
     "127.0.0.1",
-    "0.0.0.0",
+
     ".herokuapp.com"
 ]
 
