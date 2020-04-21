@@ -305,7 +305,10 @@ class Processor():
         mission = None
         user = None
         intentCount = None
-        intent = getIntentFromContexts(self.contexts)
+        if "intent" in self.params:
+            intent = self.params["intent"]
+        else:
+            intent = getIntentFromContexts(self.contexts)
         if intent != None:
             print("intent는 NONE이 아님")
             fbQuery = FirebaseQuery()
@@ -329,6 +332,7 @@ class Processor():
         if mission.useStamp == True:
             #TODO : FirebaseStorage TO CDN(보안)
             ffResponse.addImageReply(url = mission.stampUrl)
+        fbQuery.set_user(user=user)
         # notDonate, donationText = getDonationText()
 
         return ffResponse
