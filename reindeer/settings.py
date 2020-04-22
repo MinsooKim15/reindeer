@@ -30,7 +30,6 @@ DEBUG = False
 ALLOWED_HOSTS = [
     "64b5b499.ngrok.io",
     "127.0.0.1",
-
     ".herokuapp.com"
 ]
 

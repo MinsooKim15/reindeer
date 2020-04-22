@@ -320,6 +320,7 @@ class Processor():
             else:
                 intentCount = 0
         intentCount +=1
+        mainLogger.info({"intent": intent, "intentCount": intentCount})
         ffResponse = missionFeedbackSenarioFromJson(fileName="missionFeedback", intent = intent, intentCount = intentCount)
         print("intent : {}, mission:{}, user:{}, intentCount : {}".format(intent, mission, user, intentCount))
         user.totalCount += 1
@@ -332,6 +333,8 @@ class Processor():
         if mission.useStamp == True:
             #TODO : FirebaseStorage TO CDN(보안)
             ffResponse.addImageReply(url = mission.stampUrl)
+        mainLogger.info({"user": user})
+        mainLogger.info({"reply": ffResponse.replyList})
         fbQuery.set_user(user=user)
         # notDonate, donationText = getDonationText()
 
