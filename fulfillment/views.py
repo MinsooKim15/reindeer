@@ -161,7 +161,7 @@ class Processor():
         if userNew:
             ffResponse.addFollowupEvent(event = paramEvents.tutorial)
         else:
-            ffResponse.addTextReply(text="억해 엄청 단순해 보이지만, 특별한 힘이 있다는거!")
+            ffResponse.addTextReply(text="기억해 엄청 단순해 보이지만, 특별한 힘이 있다는거!")
             ffResponse.addFacebookQuickReply(
                 title = "새로운 미션을 원하면 언제든 '시작하기'라고 말해줘".format(user.firstName),
                 quickReplyList= ["시작하기"]
@@ -336,4 +336,3 @@ class Processor():
         ffResponse.addTextReply("ㅎㅎ ㅜ 부끄럽다 이제 얼마나 대충 그려도 될지 알겠지?")
         ffResponse.addTextReply("다 그리면 보내줘ㅎ 기다릴게")
         return ffResponse
-    
