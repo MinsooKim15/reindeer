@@ -113,31 +113,6 @@ def webhook(request):
 
     ffResponse = FulfillmentResponse()#그냥 놓친 action으로 인한 에러를 막기 위함.
 
-    if action == "get_suggestion_chips":
-
-        contexts[0]["parameters"]["hey"] = firstName
-        # for context in contexts:
-        #     print(context[0])
-        #     print("-----------")
-        fr = fulfillment_response()
-        # output_contexts_new = fr.output_contexts(session, contexts)
-        output_contexts = {
-            "output_contexts": contexts
-        }
-        # set fulfillment text
-        fulfillmentText = firstName + "님, 안녕하세요!"
-        aog = actions_on_google_response()
-        aog_sr = aog.simple_response([
-            [fulfillmentText,fulfillmentText, False]
-        ])
-        #create suggestiong chips
-        # aog_sc = aog.suggestion_chips(["suggestion1", "suggestion2"])
-        ff_response = fulfillment_response()
-        ff_text = ff_response.fulfillment_text(fulfillmentText)
-        # ff_messages = ff_response.fulfillment_messages([aog_sr, aog_sc])
-        reply = ff_response.main_response(ff_text, output_contexts = output_contexts)
-
-    print(action)
     # General Intent들
     if action == paramActions.welcome:
         ffResponse = processor.generalWelcome()
@@ -149,7 +124,6 @@ def webhook(request):
         ffResponse = processor.generalSelectMission()
     if action == paramActions.fallback:
         ffResponse = processor.generalFallback()
-        print("generalFallback 종료")
     if action == paramActions.later:
         ffResponse = processor.later()
 
@@ -160,7 +134,8 @@ def webhook(request):
         ffResponse = processor.generalFeelBad()
     if action == paramActions.feelSoso:
         ffResponse = processor.generalFeelSoso()
-
+    if action == paramActions.missiondoodleGiveImage:
+        ffResponse = processor.missionDoodleGiveImage()
 
     # 미션이 종료하고 최종 피드백을 한다. Param에 들어있는 Intent를 Firebase로 날려 처리한다.
     if action == paramActions.missionFeedback:
@@ -169,8 +144,6 @@ def webhook(request):
         ffResponse = processor.missionChooseCommunity()
 
     finalResponse = ffResponse.getResponse()
-    print("RESPONSE-----------------")
-    print(finalResponse)
     mainLogger.info({"response": finalResponse})
     return JsonResponse(finalResponse, safe = False)
 
@@ -188,12 +161,12 @@ class Processor():
         if userNew:
             ffResponse.addFollowupEvent(event = paramEvents.tutorial)
         else:
+            ffResponse.addTextReply(text="억해 엄청 단순해 보이지만, 특별한 힘이 있다는거!")
             ffResponse.addFacebookQuickReply(
-                title = "다시 보니 반가워 {} 미션을 시작할 때는 언제든 시작하기라고 말해줘".format(user.firstName),
+                title = "새로운 미션을 원하면 언제든 '시작하기'라고 말해줘".format(user.firstName),
                 quickReplyList= ["시작하기"]
             )
         return ffResponse
-
 
     def generalTutorialFeedback(self):
         ffResponse = FulfillmentResponse()
@@ -353,3 +326,14 @@ class Processor():
         ffResponse.addTextReply("그럼 오늘은 신청이나 등록 같은거 까지만 해보자")
         ffResponse.addFacebookQuickReply(title = "한번에 나가는 건 큰 결심이지만, 등록 같은건 금방 해볼 수 있자나",quickReplyList=["그러자"])
         return ffResponse
+    def missionDoodleGiveImage(self):
+        ffResponse = FulfillmentResponse()
+        ffResponse.addTextReply("좋아 이번엔 나부터 보여줄게")
+        url = "https://firebasestorage.googleapis.com/v0/b/reindeer-fulfillment.appspot.com/o/doodle.png?alt=media&token=a1612433-3169-44f4-8896-fb0adac5ac6f"
+        ffResponse.addImageReply(url = url)
+        ffResponse.addTextReply("짜잔...! 영험한 나를 그린 거야")
+        ffResponse.addTextReply("커피와 당근을 아주 좋아하지")
+        ffResponse.addTextReply("ㅎㅎ ㅜ 부끄럽다 이제 얼마나 대충 그려도 될지 알겠지?")
+        ffResponse.addTextReply("다 그리면 보내줘ㅎ 기다릴게")
+        return ffResponse
+    
