@@ -43,7 +43,11 @@ def fallbackScenraioFromJson(fileName,contextList):
     else:
         scenario = jsonScenario["default"]
     ffResponse = scenarioToResponse(scenario)
+    choice = random.choice([0, 1,2])
+    if choice == 1:
+        ffResponse.addTextReply("새로운 미션을 시작하려면, '미션 시작'이라고 말해줘")
     return ffResponse
+
 # def getRecentContexts(contexts):
 #     selectedContext = None
 #     if len(contexts) >=1:
