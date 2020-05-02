@@ -79,6 +79,25 @@ class User(object):
         return(
             u"User(id={}, firstName={}, lastName={}, serviceId={}, sourceService={},totalCount ={}, intent={}, stamp={}, emotionTypeCount={})".format(self.id, self.firstName, self.lastName, self.serviceId, self.sourceService, self.totalCount, self.intent, self.stamp, self.emotionTypeCount)
         )
+    def missionDone(self, mission):
+        self.totalCount += 1
+
+        # 끝낸 EmotionType Count를 추가합니다.
+        if self.emotionTypeCount == None:
+            self.emotionTypeCount = {}
+        if mission.emotionType in self.emotionTypeCount:
+            self.emotionTypeCount[mission.emotionType] += 1
+        else:
+            self.emotionTypeCount[mission.emotionType] = 1
+
+        # 끝낸 Intent를 추가합니다.
+        if self.intent == None :
+            self.intent = {}
+        if mission.intent in self.intent:
+            self.intent[mission.intent] += 1
+        else:
+            self.intent[mission.intent] = 1
+
 
 class Stamp(object):
     def __init__(self,title,imgUrl = "", condition = {}, prompt=""):
@@ -134,6 +153,7 @@ class Mission(object):
         self.id = None
         self.notUse = notUse
         self.useStamp = useStamp
+
 
     @staticmethod
     def from_dict(source):

@@ -292,17 +292,20 @@ class Processor():
                 intentCount = user.intent[intent]
             else:
                 intentCount = 0
-        intentCount +=1
-        mainLogger.info({"intent": intent, "intentCount": intentCount})
-        ffResponse = missionFeedbackSenarioFromJson(fileName="missionFeedback", intent = intent, intentCount = intentCount)
-        print("intent : {}, mission:{}, user:{}, intentCount : {}".format(intent, mission, user, intentCount))
-        user.totalCount += 1
-        if intentCount == 1:
-            user.intent[intent] = 1
-        elif intentCount == None:
-            ffResponse.addTextReply("좋았어")
+        intentCount += 1
+        user.missionDone(mission)
+        #만약 달성하지 못했으면 None
+        achieveStamp = getStampIfExist(user=user, latestMission= mission)
+        if achieveStamp != None:
+            ffResponse.addImageReply(url = achieveStamp.imgUrl)
+            ffResponse.addTextReply(text = achieveStamp.prompt)
         else:
-            user.intent[intent] += 1
+            ffResponse = missionFeedbackSenarioFromJson(fileName="missionFeedback", intent = intent, intentCount = intentCount)
+        print("intent : {}, mission:{}, user:{}, intentCount : {}".format(intent, mission, user, intentCount))
+
+        if intentCount == None:
+            ffResponse.addTextReply("좋았어")
+
         if mission.useStamp == True:
             #TODO : FirebaseStorage TO CDN(보안)
             ffResponse.addImageReply(url = mission.stampUrl)

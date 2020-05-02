@@ -6,6 +6,19 @@ from fulfillment.querys import *
 from fulfillment.models import *
 import random
 import os
+import logging
+import inspect
+
+path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+mainLogger = logging.getLogger("fulfillment")
+mainLogger.setLevel(logging.INFO)
+streamHandler = logging.StreamHandler()
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+streamHandler.setFormatter(formatter)
+mainLogger.addHandler(streamHandler)
+fileHandler = logging.FileHandler(path + "/main.log")
+fileHandler.setFormatter(formatter)
+mainLogger.addHandler(fileHandler)
 
 
 def checkContext(target, contexts):
@@ -247,4 +260,32 @@ def getIntentFromContexts(contexts):
                 intent = context["parameters"]["intent"]
     return intent
 
+def getStampIfExist(user,latestMission):
+    #TODO : Check Total Count -> EmotionType -> LastIntent
+    resultStamp = None
+    fbQuery = FirebaseQuery()
+    stampList = fbQuery.get_stamp_list()
+    for stamp in stampList:
+        mainLogger.info("loop", {"stamp": stamp.id, "condition": stamp.id})
+        if "totalCount" in stamp.condition:
+            if int(stamp.condition["totalCount"]) == user.totalCount:
+                resultStamp = stamp
+                break
 
+        else:
+            mainLogger.info("Total Count 등장 조건은 안걸림")
+        # TODO : emotionType 하위에 emotionType별 카운트를 셌어야 하는데 하드 코딩 느낌이 난다. 전체 컨디션 구조를 계층을 세워서 잡자
+        if "emotionType" in stamp.condition:
+            if (stamp.condition["emotionType"] == latestMission.emotionType)& (stamp.condition["emotionType"] in user.emotionTypeCount):
+                if (user.emotionTypeCount[stamp.condition["emotionType"]] == 1):
+                    resultStamp = stamp
+                    break
+
+        if "intentFirst" in stamp.condition:
+            mainLogger.info("intentFirst는 있네 일단")
+            if (stamp.condition["intentFirst"] in user.intent) & (stamp.condition["intentFirst"] == latestMission.intent):
+                if user.intent[stamp.condition["intentFirst"]] == 1:
+                    resultStamp = stamp
+                    break
+    print("종료", resultStamp)
+    return resultStamp
