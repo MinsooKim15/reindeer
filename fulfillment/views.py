@@ -136,6 +136,10 @@ def webhook(request):
         ffResponse = processor.generalFeelSoso()
     if action == paramActions.missiondoodleGiveImage:
         ffResponse = processor.missionDoodleGiveImage()
+    if action == paramActions.missionStart:
+        ffResponse = processor.missionStart()
+    if action == paramActions.generalMissionDone:
+        ffResponse = processor.generalMissionDone()
 
     # 미션이 종료하고 최종 피드백을 한다. Param에 들어있는 Intent를 Firebase로 날려 처리한다.
     if action == paramActions.missionFeedback:
@@ -315,6 +319,15 @@ class Processor():
         # notDonate, donationText = getDonationText()
 
         return ffResponse
+    def missionStart(self):
+        ffResponse = FulfillmentResponse()
+        fbQuery = FirebaseQuery()
+        if u"intent" in self.params:
+            user = fbQuery.get_user(self.sid, sourceService="facebook")
+            user.missionStart(self.params[u"intent"])
+        # TODO : 시작 시나리오를 Json으로 가져오기(답변 속도 향상을 위함)
+        fbQuery.set_user(user)
+        return ffResponse
     def missionChooseCommunity(self):
         param = None
         if self.params:
@@ -338,4 +351,21 @@ class Processor():
         ffResponse.addTextReply("커피와 당근을 아주 좋아하지")
         ffResponse.addTextReply("ㅎㅎ ㅜ 부끄럽다 이제 얼마나 대충 그려도 될지 알겠지?")
         ffResponse.addTextReply("다 그리면 보내줘ㅎ 기다릴게")
+        return ffResponse
+    def generalMissionDone(self):
+        fbQuery = FirebaseQuery()
+        user = fbQuery.get_user(self.sid,sourceService="facebook")
+        ffResponse = FulfillmentResponse()
+        #하던 미션이 있으면, 해당 미션 이어서 진행할 수 있도록 doneEvent를 날린다.
+        if user.doingMission != None:
+            mission = fbQuery.get_mission_by_intent(user.doingMission)
+            ffResponse.addFollowupEvent(event = mission.doneEvent)
+            #TODO : Context를 같이 보내주면 event가 먹네요. 데이터 구조에 doneContext도 추가해야 할듯 ㅜ
+            #lifespan을 2 이상으로 두면 fallback이 context를 물어서 난리 버거지가 난다
+
+            context = makeContext(projectId = self.projectId, session = self.session, lifeSpan = 1, parameters = {}, contextName= "missionclean_yes-custom-followup")
+            ffResponse.addContexts([context])
+        else:
+        # 하던 미션이 없으면, fallback 처리한다.
+            ffResponse.addTextReply(text = "음 잘 모르겠어")
         return ffResponse

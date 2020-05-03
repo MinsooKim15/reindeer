@@ -14,6 +14,9 @@ class Actions:
         self.feelGood = "general.feelgood"
         self.feelBad = "general.feelbad"
         self.feelSoso = "general.feelsoso"
+        self.missionStart = "mission.start"
+        self.generalMissionDone = "general.missionDone"
+
 
 
 class Events:

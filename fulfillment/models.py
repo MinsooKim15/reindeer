@@ -3,7 +3,7 @@ from datetime import datetime
 
 # Create your models here.
 class User(object):
-    def __init__(self,serviceId, sourceService = "facebook", totalCount=0,firstName="", lastName="",  intent={}, stamp=[],emotionTypeCount = {}):
+    def __init__(self,serviceId, sourceService = "facebook", totalCount=0,firstName="", lastName="",  intent={}, stamp=[],emotionTypeCount = {}, doingMission = None,latestMission = None ):
         #firstName, lastName 비워질 수 있게 변경
 
         if len(firstName) > 0 :
@@ -16,6 +16,8 @@ class User(object):
         self.intent = intent
         self.stamp = stamp
         self.emotionTypeCount = emotionTypeCount
+        self.doingMission = doingMission
+        self.latestMission = latestMission
 
         if self.sourceService == "facebook":
             self.id = u"fb_" + serviceId
@@ -37,6 +39,7 @@ class User(object):
             user.sourceService = source[u"sourceService"]
         else:
             user.sourceService = "facebook"
+
         if u"totalCount" in source:
             user.totalCount = source[u"totalCount"]
         if u"intent" in source:
@@ -54,6 +57,15 @@ class User(object):
                 "calm" : 0,
                 "confident" : 0
             }
+        if u"doingMission" in source:
+            user.doingMission = source[u"doingMission"]
+        else:
+            user.doingMission = None
+        if u"latestMission" in source:
+            user.latestMission = source[u"latestMission"]
+        else:
+            user.latestMission = None
+
         return user
 
     def to_dict(self):
@@ -64,7 +76,9 @@ class User(object):
             u"intent" : self.intent,
             u"stamp": self.stamp,
             u"emotionTypeCount" : self.emotionTypeCount,
-            u"updated" : datetime.now()
+            u"updated" : datetime.now(),
+            u"latestMission" : self.latestMission,
+            u"doingMission" : self.doingMission
         }
         if self.firstName:
            dest[u'firstName'] = self.firstName
@@ -77,7 +91,7 @@ class User(object):
         self.id = id
     def __repr__(self):
         return(
-            u"User(id={}, firstName={}, lastName={}, serviceId={}, sourceService={},totalCount ={}, intent={}, stamp={}, emotionTypeCount={})".format(self.id, self.firstName, self.lastName, self.serviceId, self.sourceService, self.totalCount, self.intent, self.stamp, self.emotionTypeCount)
+            u"User(id={}, firstName={}, lastName={}, serviceId={}, sourceService={},totalCount ={}, intent={}, stamp={}, emotionTypeCount={}), latestMission={}, doingMission= {}".format(self.id, self.firstName, self.lastName, self.serviceId, self.sourceService, self.totalCount, self.intent, self.stamp, self.emotionTypeCount, self.latestMission, self.doingMission)
         )
     def missionDone(self, mission):
         self.totalCount += 1
@@ -97,6 +111,15 @@ class User(object):
             self.intent[mission.intent] += 1
         else:
             self.intent[mission.intent] = 1
+        #종료한 미션의 종류와 상관없이,doingMission을 비웁니다.
+        self.doingMission = None
+        self.latestMission = mission.intent
+
+
+    def missionStart(self,mission):
+        # intent명만 받아서 바로 집어넣는다.
+        self.doingMission = mission
+
 
 
 class Stamp(object):
@@ -141,7 +164,7 @@ class Stamp(object):
         )
 
 class Mission(object):
-    def __init__(self, intent, phrase, event, emotionType, actionType, category, stampUrl = "",  condition={}, notUse= False, useStamp =False ):
+    def __init__(self, intent, phrase, event, emotionType, actionType, category, stampUrl = "",  condition={}, notUse= False, useStamp =False, doneEvent = None ):
         self.intent = intent
         self.phrase = phrase
         self.stampUrl = stampUrl
@@ -153,6 +176,7 @@ class Mission(object):
         self.id = None
         self.notUse = notUse
         self.useStamp = useStamp
+        self.doneEvent = doneEvent
 
 
     @staticmethod
@@ -164,6 +188,11 @@ class Mission(object):
             mission.condtion = {}
         if u"stampUrl" in source:
             mission.stampUrl = source[u"stampUrl"]
+        if u"doneEvent" in source:
+            mission.doneEvent = source[u"doneEvent"]
+        else:
+            mission.doneEvent = None
+
         return mission
     def to_dict(self):
         dest = {
@@ -175,7 +204,8 @@ class Mission(object):
             u"updated" : datetime.now(),
             u"notUse" : self.notUse,
             u"event" : self.event,
-            u"useStamp" : self.useStamp
+            u"useStamp" : self.useStamp,
+            u"doneEvent": self.doneEvent
         }
         if self.condtion:
             dest[u"condition"] = self.condition
@@ -188,5 +218,5 @@ class Mission(object):
         self.id = id
     def __repr__(self):
         return(
-            "Mission(id={}, intent={}, phrase={}, stampUrl ={}, emotionType={}, actionType={}, category={}, condition={}, notUse = {}, event ={}, useStamp ={})".format(self.id, self.intent, self.phrase, self.stampUrl, self.emotionType, self.actionType, self.category, self.condition, self.notUse, self.event, self.useStamp)
+            "Mission(id={}, intent={}, phrase={}, stampUrl ={}, emotionType={}, actionType={}, category={}, condition={}, notUse = {}, event ={}, useStamp ={}, doneEvent= {})".format(self.id, self.intent, self.phrase, self.stampUrl, self.emotionType, self.actionType, self.category, self.condition, self.notUse, self.event, self.useStamp, self.doneEvent)
         )
