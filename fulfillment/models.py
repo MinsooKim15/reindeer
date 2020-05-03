@@ -164,7 +164,7 @@ class Stamp(object):
         )
 
 class Mission(object):
-    def __init__(self, intent, phrase, event, emotionType, actionType, category, stampUrl = "",  condition={}, notUse= False, useStamp =False, doneEvent = None ):
+    def __init__(self, intent, phrase, event, emotionType, actionType, category, stampUrl = "",  condition={}, notUse= False, useStamp =False, doneEvent = None, doneContext = None ):
         self.intent = intent
         self.phrase = phrase
         self.stampUrl = stampUrl
@@ -177,6 +177,7 @@ class Mission(object):
         self.notUse = notUse
         self.useStamp = useStamp
         self.doneEvent = doneEvent
+        self.doneContext = doneContext
 
 
     @staticmethod
@@ -192,6 +193,10 @@ class Mission(object):
             mission.doneEvent = source[u"doneEvent"]
         else:
             mission.doneEvent = None
+        if u"doneContext" in source:
+            mission.doneContext = source[u"doneContext"]
+        else:
+            mission.doneContext = None
 
         return mission
     def to_dict(self):
@@ -205,7 +210,8 @@ class Mission(object):
             u"notUse" : self.notUse,
             u"event" : self.event,
             u"useStamp" : self.useStamp,
-            u"doneEvent": self.doneEvent
+            u"doneEvent": self.doneEvent,
+            u"doneContext" : self.doneContext
         }
         if self.condtion:
             dest[u"condition"] = self.condition

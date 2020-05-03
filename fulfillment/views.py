@@ -362,8 +362,7 @@ class Processor():
             ffResponse.addFollowupEvent(event = mission.doneEvent)
             #TODO : Context를 같이 보내주면 event가 먹네요. 데이터 구조에 doneContext도 추가해야 할듯 ㅜ
             #lifespan을 2 이상으로 두면 fallback이 context를 물어서 난리 버거지가 난다
-
-            context = makeContext(projectId = self.projectId, session = self.session, lifeSpan = 1, parameters = {}, contextName= "missionclean_yes-custom-followup")
+            context = makeContext(projectId = self.projectId, session = self.session, lifeSpan = 1, parameters = {}, contextName= mission.doneContext)
             ffResponse.addContexts([context])
         else:
         # 하던 미션이 없으면, fallback 처리한다.
