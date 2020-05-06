@@ -109,8 +109,9 @@ class FulfillmentResponse():
 
 
     def addContexts(self, contexts):
-        self.contexts = contexts
-    #     print(self.data)
+        #Context Class 상태로 받는다.
+        for context in contexts:
+            self.contexts.append(context.toDict())
 
 
     def getResponse(self):
@@ -238,6 +239,63 @@ class FulfillmentResponse():
     #         }
     #     }
     #     self.data["payload"]["facebook"] = facebook
+
+class Context():
+    def __init__(self, projectId, session, contextName, lifeSpan = 1,  parameters = {}):
+        self.projectId = projectId
+        self.session = session
+        self.lifeSpan = lifeSpan
+        self.parameters = parameters
+        self.contextName = contextName
+    def toDict(self):
+        result = {
+            "name": "projects/" + self.projectId + "/agent/sessions/" + self.session + "/contexts/" + self.contextName,
+            "lifespanCount": self.lifeSpan,
+            "parameters": self.parameters
+        }
+        return result
+
+    @staticmethod
+    def fromDict(source):
+        print(source)
+        projectId = source['name'].split("/")[1]
+        session = source['name'].split("/")[4]
+        contextName = source['name'].split("/")[6]
+        if u"lifeSpanCount" in source:
+            lifespan = source[u"lifeSpanCount"]
+        else:
+            lifeSpan = 0
+        if u"parameters" in source:
+            param = source[u"parameters"]
+        else:
+            param = {}
+        context = Context(projectId = projectId, session = session, contextName= contextName, lifeSpan=lifeSpan, parameters = param)
+        return context
+
+    def extandIntentLifeSpan(self, lifespanCount):
+        #generic과 System count는 연장하지 않음
+        if (self.notGeneric()) & (self.notSystemCounter()):
+            self.parameters[u"lifeSpanChanged"] = True
+            self.lifeSpan = lifespanCount
+    def addIntent(self,intent):
+        if (self.notGeneric()) & (self.notSystemCounter()):
+            self.parameters[u"intent"] = intent
+
+    def notGeneric(self):
+        isGeneric = True
+        if self.contextName == "generic":
+            isGeneric = False
+        return isGeneric
+    def notSystemCounter(self):
+        isSystemCounter = True
+        if self.contextName == "__system_counters__":
+            isSystemCounter = False
+        return isSystemCounter
+    def getIntent(self):
+        if u"intent" in self.parameters:
+            return self.parameters[u"intent"]
+        else:
+            return None
 
 
 

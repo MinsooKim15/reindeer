@@ -48,7 +48,7 @@ def fallbackScenraioFromJson(fileName,contextList):
             if selectedKey != None:
                 break
             for context in contextList:
-                if key == context:
+                if key == context.contextName:
                     selectedKey = key
                     break
     if selectedKey != None:
@@ -254,10 +254,7 @@ def getDonationText(ffResponse):
 def getIntentFromContexts(contexts):
     intent = None
     for context in contexts:
-        print(context)
-        if "parameters" in context:
-            if "intent" in context["parameters"]:
-                intent = context["parameters"]["intent"]
+        intent = context.getIntent()
     return intent
 
 def getStampIfExist(user,latestMission):

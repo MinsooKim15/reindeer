@@ -75,22 +75,25 @@ def webhook(request):
     print("Request ------------")
     print(req)
     action = req.get('queryResult').get('action')
-    contexts = req.get('queryResult').get('outputContexts')
+    inputContexts = req.get('queryResult').get('outputContexts')
+    contexts = []
+    for inputContext in inputContexts:
+        context = Context.fromDict(inputContext)
+        contexts.append(context)
+    #Dialoflow Request를 소화하는 로직이 하나 있어야 할듯
+    #Context를 객체화 시켜서 저장합니다.
+
     dialogFlowParameters = req.get("queryResult").get("parameters")
 
     contextList = []
-    projectId = contexts[0]["name"].split("/")[1]
-    session = contexts[0]["name"].split("/")[4]
+    projectId = contexts[0].projectId
+    session = contexts[0].session
     payload = req.get('originalDetectIntentRequest').get('payload')
     if "data" in payload:
         sid = payload.get('data').get('sender').get('id')
     else:
         sid = None
 
-    # projectData = {
-    #     "projectId" : projectId,
-    #     ""
-    # }
     processor = Processor(
         action=action,
         contexts=contexts,
@@ -99,17 +102,16 @@ def webhook(request):
         session=session,
         sid = sid,
     )
+
+    #TODO :로깅 로직 수정
     contextList = []
-    for context in contexts:
-        contextName = context["name"].split("/")[-1]
-        if 'lifespanCount' in context:
-            count = context["lifespanCount"]
-        else:
-            count = 0
+    for context in processor.contexts:
+        contextName = context.contextName
+        count = context.lifeSpan
         addingContext = {"contextName": contextName, "count": count}
         contextList.append(addingContext)
     mainLogger.info({"contextList": contextList})
-    # TODO : Suggestion Chips 로직을 참고해, User 정보를 다루는 구성을 만들자
+    #여기까지가 로깅 로직
 
     ffResponse = FulfillmentResponse()#그냥 놓친 action으로 인한 에러를 막기 위함.
 
@@ -212,13 +214,13 @@ class Processor():
         #TODO : Context가 2번 이상 유지 되지 않는 문제가 있음, Outputcontext를 추가하자
         print("generalFallback 진입")
         ffResponse = FulfillmentResponse()
-        contextList  = getActionContextNames(self.contexts)
-
-        ffResponse = fallbackScenraioFromJson(fileName="fallback", contextList= contextList)
+        # contextList  = getActionContextNames(self.contexts)
+        # for context in self.contexts:
+        ffResponse = fallbackScenraioFromJson(fileName="fallback", contextList= self.contexts)
 
         print(len(self.contexts))
-        self.contexts = makeContextsLifespan(self.contexts, lifespanCount= 3)
-        print(len(self.contexts))
+        for context in self.contexts:
+            context.extandIntentLifeSpan(lifespanCount=3)
         ffResponse.addContexts(contexts = self.contexts)
         print("generalFallback 종료")
         return ffResponse
@@ -243,21 +245,13 @@ class Processor():
     def generalFeelGood(self):
         # TODO : 그냥 뜸근없이 유입된 경우 대비 시나리오 추가
 
-        contextList = getActionContextNames(self.contexts)
         # 임시테스트
         intent = getIntentFromContexts(self.contexts)
-        print(intent)
+
         if intent != None:
             ffResponse = scenarioFromJson(fileName= paramScenarios.feelgood, param= intent)
         else:
             ffResponse = scenarioFromJson(fileName= paramScenarios.feelgood, param = "default")
-        # self.contexts = makeContextsLifespan(self.contexts, lifespanCount=3)
-        # print(ffResponse.replyList)
-        #
-        # if intent != None:
-        #     self.contexts = addIntentToContexts(self.contexts, intent)
-        # ffResponse.addContexts(self.contexts)
-        # ffResponse.addButton(url = "https://www.buymeacoffee.com/reindeer",buttonText = "레인디어 후원하기")
         return ffResponse
 
     def generalFeelBad(self):
@@ -298,6 +292,7 @@ class Processor():
             fbQuery = FirebaseQuery()
             mission = fbQuery.get_mission_by_intent(intent)
             user = fbQuery.get_user(self.sid,sourceService="facebook")
+        mainLogger.info({"user": user, "intent" : intent, "mission" : mission})
         if (mission != None) & (user != None):
             if intent in user.intent:
                 intentCount = user.intent[intent]
@@ -324,7 +319,6 @@ class Processor():
         mainLogger.info({"reply": ffResponse.replyList})
         fbQuery.set_user(user=user)
         # notDonate, donationText = getDonationText()
-
         return ffResponse
     def missionStart(self):
         ffResponse = FulfillmentResponse()
@@ -369,7 +363,7 @@ class Processor():
             ffResponse.addFollowupEvent(event = mission.doneEvent)
             #TODO : Context를 같이 보내주면 event가 먹네요. 데이터 구조에 doneContext도 추가해야 할듯 ㅜ
             #lifespan을 2 이상으로 두면 fallback이 context를 물어서 난리 버거지가 난다
-            context = makeContext(projectId = self.projectId, session = self.session, lifeSpan = 1, parameters = {}, contextName= mission.doneContext)
+            context = Context(projectId = self.projectId, session = self.session, lifeSpan = 1, parameters = {}, contextName= mission.doneContext)
             ffResponse.addContexts([context])
         else:
         # 하던 미션이 없으면, fallback 처리한다.
