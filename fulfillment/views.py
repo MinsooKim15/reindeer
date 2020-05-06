@@ -147,6 +147,13 @@ def webhook(request):
     if action == "choose.community":#임시임.
         ffResponse = processor.missionChooseCommunity()
 
+    if action == paramActions.emotionGood:
+        ffResponse = processor.emotionGood()
+    if action == paramActions.emotionBad:
+        ffResponse = processor.emotionBad()
+    if action == paramActions.emotionNeutral:
+        ffResponse = processor.emotionNeutral()
+
     finalResponse = ffResponse.getResponse()
     mainLogger.info({"response": finalResponse})
     return JsonResponse(finalResponse, safe = False)
@@ -368,3 +375,34 @@ class Processor():
         # 하던 미션이 없으면, fallback 처리한다.
             ffResponse.addTextReply(text = "음 잘 모르겠어")
         return ffResponse
+    def emotionGood(self):
+        #TODO : 좋은 emotion은 그냥 smallTalk처리
+        ffResponse = FulfillmentResponse()
+        return ffResponse
+
+
+    def emotionBad(self):
+        ffResponse = FulfillmentResponse()
+        missions = getRandomMission(self.sid, getCount= 3, sourceService= "facebook")
+        ffResponse.addTextReply(text = "에고, 그렇구나.. 그럴 때는 가볍게 기분이 풀릴만한 것들을 해보는 것도 괜찮아")
+
+        quickReplyList = []
+        for mission in missions:
+            quickReplyList.append(mission.phrase)
+        quickReplyList.append("그만할래")
+        ffResponse.addFacebookQuickReply(title="이런건 어때?", quickReplyList=quickReplyList)
+
+        return ffResponse
+
+    def emotionNeutral(self):
+        ffResponse = FulfillmentResponse()
+        missions = getRandomMission(self.sid, getCount= 3, sourceService= "facebook")
+        ffResponse.addTextReply(text = "그럴 땐 나랑 노는 거 어때?")
+
+        quickReplyList = []
+        for mission in missions:
+            quickReplyList.append(mission.phrase)
+        quickReplyList.append("그만할래")
+        ffResponse.addFacebookQuickReply(title="새로운 미션들을 해보자", quickReplyList=quickReplyList)
+        return ffResponse
+

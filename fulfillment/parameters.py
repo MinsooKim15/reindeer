@@ -16,6 +16,9 @@ class Actions:
         self.feelSoso = "general.feelsoso"
         self.missionStart = "mission.start"
         self.generalMissionDone = "general.missionDone"
+        self.emotionBad = "emotion.bad"
+        self.emotionNeutral = "emotion.neutral"
+        self.emotionGood = "emotion.good"
 
 
 
