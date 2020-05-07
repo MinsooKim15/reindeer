@@ -57,6 +57,7 @@ class FirebaseQuery(object):
             mission = Mission.from_dict(doc.to_dict())
             mission.set_id(doc.id)
             missionList.append(mission)
+        print(missionList)
 
         if len(missionList) == 1:
             mission = missionList[0]

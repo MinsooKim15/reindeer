@@ -110,8 +110,12 @@ class FulfillmentResponse():
 
     def addContexts(self, contexts):
         #Context Class 상태로 받는다.
+
         for context in contexts:
-            self.contexts.append(context.toDict())
+            if self.contexts == None:
+                self.contexts = [context.toDict()]
+            else:
+                self.contexts.append(context.toDict())
 
 
     def getResponse(self):
@@ -296,6 +300,8 @@ class Context():
             return self.parameters[u"intent"]
         else:
             return None
+    def addParam(self,key, value):
+        self.parameters[key] = value
 
 
 

@@ -1,7 +1,21 @@
 import json
-from responseUtility import *
+from library.responseUtility import *
+import inspect
+import logging
+import os
 
 #Input Context를 그대로 OutPut으로 내보내는 방식
+path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+mainLogger = logging.getLogger("fulfillment")
+mainLogger.setLevel(logging.INFO)
+streamHandler = logging.StreamHandler()
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+streamHandler.setFormatter(formatter)
+mainLogger.addHandler(streamHandler)
+fileHandler = logging.FileHandler(path + "/main.log")
+fileHandler.setFormatter(formatter)
+mainLogger.addHandler(fileHandler)
+
 
 class Agent():
     def __init__(self, request):
@@ -20,11 +34,13 @@ class Agent():
         self.session = self.contexts[0].session
         self.params = req.get("queryResult").get("parameters")
         self.responseList = []
+        mainLogger.info({"request":req})
 
     def getIntent(self):
         intent = None
         if u"intent" in self.params:
             intent = self.params[u"intent"]
+            self.addIntentToContext(intent)
         else:
             intent = self.getIntentFromContexts()
         return intent
@@ -32,8 +48,18 @@ class Agent():
     def getIntentFromContexts(self):
         intent = None
         for context in self.contexts:
-            intent = context.getIntent()
+            intentTemp = context.getIntent()
+            if intentTemp != None:
+                intent = intentTemp
+            mainLogger.info("getIntent호출")
+            mainLogger.info(intent)
         return intent
+    def addIntentToContext(self, intent):
+        for context in self.contexts:
+            if (context.notSystemCounter())&(context.notGeneric()):
+                context.addParam(key = "intent", value = intent)
+
+
 #Response 관련
     def add(self, inputResponse):
         if isinstance(inputResponse, Event):

@@ -21,6 +21,7 @@ import pathlib
 from firebase_admin import storage
 import logging
 import inspect
+from library.agent import *
 
 path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 mainLogger = logging.getLogger("fulfillment")
@@ -70,37 +71,42 @@ def webhook(request):
     print(request.headers)
     if requestToken != verifyToken:
         raise PermissionDenied
-    req = json.loads(request.body)
-    mainLogger.info({"request":req})
-    print("Request ------------")
-    print(req)
-    action = req.get('queryResult').get('action')
-    inputContexts = req.get('queryResult').get('outputContexts')
-    contexts = []
-    for inputContext in inputContexts:
-        context = Context.fromDict(inputContext)
-        contexts.append(context)
-    #Dialoflow Request를 소화하는 로직이 하나 있어야 할듯
-    #Context를 객체화 시켜서 저장합니다.
+    agent = Agent(request)
 
-    dialogFlowParameters = req.get("queryResult").get("parameters")
+    # 로직 변경을 위한 임시 주석처리
 
-    contextList = []
-    projectId = contexts[0].projectId
-    session = contexts[0].session
-    payload = req.get('originalDetectIntentRequest').get('payload')
-    if "data" in payload:
-        sid = payload.get('data').get('sender').get('id')
-    else:
-        sid = None
+    # req = json.loads(request.body)
+    # mainLogger.info({"request":req})
+    # print("Request ------------")
+    # print(req)
+    # action = req.get('queryResult').get('action')
+    # inputContexts = req.get('queryResult').get('outputContexts')
+    # contexts = []
+    # for inputContext in inputContexts:
+    #     context = Context.fromDict(inputContext)
+    #     contexts.append(context)
+    # #Dialoflow Request를 소화하는 로직이 하나 있어야 할듯
+    # #Context를 객체화 시켜서 저장합니다.
+    #
+    # dialogFlowParameters = req.get("queryResult").get("parameters")
+    #
+    # contextList = []
+    # projectId = contexts[0].projectId
+    # session = contexts[0].session
+    # payload = req.get('originalDetectIntentRequest').get('payload')
+    # if "data" in payload:
+    #     sid = payload.get('data').get('sender').get('id')
+    # else:
+    #     sid = None
 
     processor = Processor(
-        action=action,
-        contexts=contexts,
-        params=dialogFlowParameters,
-        projectId = projectId,
-        session=session,
-        sid = sid,
+        action= agent.action,
+        contexts= agent.contexts,
+        params= agent.params,
+        projectId = agent.projectId,
+        session= agent.session,
+        sid = agent.sid,
+        intent = agent.getIntent()
     )
 
     #TODO :로깅 로직 수정
@@ -116,58 +122,59 @@ def webhook(request):
     ffResponse = FulfillmentResponse()#그냥 놓친 action으로 인한 에러를 막기 위함.
 
     # General Intent들
-    if action == paramActions.welcome:
+    if agent.action == paramActions.welcome:
         ffResponse = processor.generalWelcome()
-    if action == paramActions.tutorialFeedback:
+    if agent.action == paramActions.tutorialFeedback:
         ffResponse = processor.generalTutorialFeedback()
-    if action == paramActions.newMission:
+    if agent.action == paramActions.newMission:
         ffResponse = processor.generalNewMission()
-    if action == paramActions.selectMission:
+    if agent.action == paramActions.selectMission:
         ffResponse = processor.generalSelectMission()
-    if action == paramActions.fallback:
+    if agent.action == paramActions.fallback:
         ffResponse = processor.generalFallback()
-    if action == paramActions.later:
+    if agent.action == paramActions.later:
         ffResponse = processor.later()
 
     # General 소감 표현을 처음 받았을 때의 처리
-    if action == paramActions.feelGood:
+    if agent.action == paramActions.feelGood:
         ffResponse = processor.generalFeelGood()
-    if action == paramActions.feelBad:
+    if agent.action == paramActions.feelBad:
         ffResponse = processor.generalFeelBad()
-    if action == paramActions.feelSoso:
+    if agent.action == paramActions.feelSoso:
         ffResponse = processor.generalFeelSoso()
-    if action == paramActions.missiondoodleGiveImage:
+    if agent.action == paramActions.missiondoodleGiveImage:
         ffResponse = processor.missionDoodleGiveImage()
-    if action == paramActions.missionStart:
+    if agent.action == paramActions.missionStart:
         ffResponse = processor.missionStart()
-    if action == paramActions.generalMissionDone:
+    if agent.action == paramActions.generalMissionDone:
         ffResponse = processor.generalMissionDone()
 
     # 미션이 종료하고 최종 피드백을 한다. Param에 들어있는 Intent를 Firebase로 날려 처리한다.
-    if action == paramActions.missionFeedback:
+    if agent.action == paramActions.missionFeedback:
        ffResponse = processor.missionFeedback()
-    if action == "choose.community":#임시임.
+    if agent.action == "choose.community":#임시임.
         ffResponse = processor.missionChooseCommunity()
 
-    if action == paramActions.emotionGood:
+    if agent.action == paramActions.emotionGood:
         ffResponse = processor.emotionGood()
-    if action == paramActions.emotionBad:
+    if agent.action == paramActions.emotionBad:
         ffResponse = processor.emotionBad()
-    if action == paramActions.emotionNeutral:
+    if agent.action == paramActions.emotionNeutral:
         ffResponse = processor.emotionNeutral()
-
+    # ffResponse.addContexts(agent.contexts)
     finalResponse = ffResponse.getResponse()
     mainLogger.info({"response": finalResponse})
     return JsonResponse(finalResponse, safe = False)
 
 class Processor():
-    def __init__(self, action, contexts, params, projectId, session, sid):
+    def __init__(self, action, contexts, params, projectId, session, sid, intent):
         self.action = action
         self.contexts = contexts
         self.params = params
         self.projectId  = projectId
         self.session = session
         self.sid = sid
+        self.intent = intent
     def generalWelcome(self):
         userNew, user = checkNewAndGetUser(sid = self.sid, sourceService = "facebook")
         ffResponse = FulfillmentResponse()
@@ -246,10 +253,10 @@ class Processor():
         # TODO : 그냥 뜸근없이 유입된 경우 대비 시나리오 추가
 
         # 임시테스트
-        intent = getIntentFromContexts(self.contexts)
+        # intent = getIntentFromContexts(self.contexts)
 
-        if intent != None:
-            ffResponse = scenarioFromJson(fileName= paramScenarios.feelgood, param= intent)
+        if self.intent != None:
+            ffResponse = scenarioFromJson(fileName= paramScenarios.feelgood, param= self.intent)
         else:
             ffResponse = scenarioFromJson(fileName= paramScenarios.feelgood, param = "default")
         return ffResponse
@@ -283,22 +290,24 @@ class Processor():
         mission = None
         user = None
         intentCount = None
-        if "intent" in self.params:
-            intent = self.params["intent"]
-        else:
-            intent = getIntentFromContexts(self.contexts)
-        if intent != None:
+        # if "intent" in self.params:
+        #     intent = self.params["intent"]
+        # else:
+        #     intent = getIntentFromContexts(self.contexts)
+        if self.intent != None:
             print("intent는 NONE이 아님")
             fbQuery = FirebaseQuery()
-            mission = fbQuery.get_mission_by_intent(intent)
-            user = fbQuery.get_user(self.sid,sourceService="facebook")
-        mainLogger.info({"user": user, "intent" : intent, "mission" : mission})
+
+            mission = fbQuery.get_mission_by_intent(self.intent)
+            user = fbQuery.get_user(self.sid, sourceService="facebook")
+        mainLogger.info({"user": user, "intent" : self.intent, "mission" : mission})
         if (mission != None) & (user != None):
-            if intent in user.intent:
-                intentCount = user.intent[intent]
+            if self.intent in user.intent:
+                intentCount = user.intent[self.intent]
             else:
                 intentCount = 0
         intentCount += 1
+        mainLogger.info({"intentCount": intentCount})
         user.missionDone(mission)
         #만약 달성하지 못했으면 None
         achieveStamp = getStampIfExist(user=user, latestMission= mission)
@@ -306,8 +315,8 @@ class Processor():
             ffResponse.addImageReply(url = achieveStamp.imgUrl)
             ffResponse.addTextReply(text = achieveStamp.prompt)
         else:
-            ffResponse = missionFeedbackSenarioFromJson(fileName="missionFeedback", intent = intent, intentCount = intentCount)
-        print("intent : {}, mission:{}, user:{}, intentCount : {}".format(intent, mission, user, intentCount))
+            ffResponse = missionFeedbackSenarioFromJson(fileName="missionFeedback", intent = self.intent, intentCount = intentCount)
+        print("intent : {}, mission:{}, user:{}, intentCount : {}".format(self.intent, mission, user, intentCount))
 
         if intentCount == None:
             ffResponse.addTextReply("좋았어")
