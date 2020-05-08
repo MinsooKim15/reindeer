@@ -93,7 +93,8 @@ class User(object):
         return(
             u"User(id={}, firstName={}, lastName={}, serviceId={}, sourceService={},totalCount ={}, intent={}, stamp={}, emotionTypeCount={}), latestMission={}, doingMission= {}".format(self.id, self.firstName, self.lastName, self.serviceId, self.sourceService, self.totalCount, self.intent, self.stamp, self.emotionTypeCount, self.latestMission, self.doingMission)
         )
-    def missionDone(self, mission):
+    def missionDone(self, mission = None):
+
         self.totalCount += 1
 
         # 끝낸 EmotionType Count를 추가합니다.

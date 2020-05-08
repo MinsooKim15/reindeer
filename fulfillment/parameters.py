@@ -24,7 +24,7 @@ class Actions:
 
 class Events:
     def __init__(self):
-        self.tutorial = "actions_intent_TUTORIAL"
+        self.tutorial = "mission_tutorial"
         self.selectMission = "actions_intent_SELECTMISSION"
         self.newMission = "actions_intent_NEWMISSION"
         self.finalFeedback = "actions_intent_FINALFEEDBACK"

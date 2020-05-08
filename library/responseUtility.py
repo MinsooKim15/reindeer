@@ -153,7 +153,7 @@ class FulfillmentResponse():
                     qr = {
                         "content_type" : "text",
                         "title" : quickReply,
-                        "payload": "<POSTBACK_PAYLOAD>"
+                        "payload": quickReply
                     }
                     facebook["quick_replies"].append(qr)
 
@@ -302,6 +302,8 @@ class Context():
             return None
     def addParam(self,key, value):
         self.parameters[key] = value
+    def clearCount(self):
+        self.lifeSpan = 0
 
 
 

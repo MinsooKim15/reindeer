@@ -48,6 +48,17 @@ class FirebaseQuery(object):
             stamp.set_id(doc.id)
             stampList.append(stamp)
         return stampList
+    def get_stamp(self, stampName):
+        db = firestore.client()
+        doc_ref = db.collection(u"stamps").document(stampName)
+        doc = doc_ref.get()
+        if doc.exists:
+            stamp = Stamp.from_dict(doc.to_dict())
+            stamp.set_id(stampName)
+        else:
+            stamp = None
+        return stamp
+
     def get_mission_by_intent(self, intent):
         db = firestore.client()
         doc_ref = db.collection(u"missions").where(u"intent", u"==", intent)

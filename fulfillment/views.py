@@ -42,7 +42,7 @@ path = str(pathlib.Path().absolute())
 print(os.environ.get("FIREBASE_PRIVATE_KEY_ID"))
 cred = credentials.Certificate({
       "type": "service_account",
-      "project_id": "reindeer-fulfillment",
+      "project_id": os.environ.get("FIREBASE_PROJECT_ID"),
       "private_key_id": os.environ.get("FIREBASE_PRIVATE_KEY_ID"),
       "private_key": os.environ.get("FIREBASE_PRIVATE_KEY").replace('\\n', '\n'),
       "client_email": os.environ.get("FIREBASE_CLIENT_EMAIL"),
@@ -106,7 +106,8 @@ def webhook(request):
         projectId = agent.projectId,
         session= agent.session,
         sid = agent.sid,
-        intent = agent.getIntent()
+        intent = agent.getIntent(),
+        agent = agent
     )
 
     #TODO :로깅 로직 수정
@@ -167,7 +168,7 @@ def webhook(request):
     return JsonResponse(finalResponse, safe = False)
 
 class Processor():
-    def __init__(self, action, contexts, params, projectId, session, sid, intent):
+    def __init__(self, action, contexts, params, projectId, session, sid, intent, agent):
         self.action = action
         self.contexts = contexts
         self.params = params
@@ -175,13 +176,19 @@ class Processor():
         self.session = session
         self.sid = sid
         self.intent = intent
+        self.agent = agent
+
     def generalWelcome(self):
         userNew, user = checkNewAndGetUser(sid = self.sid, sourceService = "facebook")
         ffResponse = FulfillmentResponse()
-        if userNew:
+        if (userNew):
+            ffResponse.addFollowupEvent(event = paramEvents.tutorial)
+            user = makeNewUserAndGet(self.sid, "facebook", countOne= False)
+        elif (user.totalCount ==0):
             ffResponse.addFollowupEvent(event = paramEvents.tutorial)
         else:
             ffResponse.addTextReply(text="기억해 엄청 단순해 보이지만, 특별한 힘이 있다는거!")
+
             ffResponse.addFacebookQuickReply(
                 title = "새로운 미션을 원하면 언제든 '시작하기'라고 말해줘".format(user.firstName),
                 quickReplyList= ["시작하기"]
@@ -191,8 +198,15 @@ class Processor():
     def generalTutorialFeedback(self):
         ffResponse = FulfillmentResponse()
         # TODO : 스탬프를 돌려준다.
-        user = makeNewUserAndGet(self.sid,"facebook")
-        ffResponse.addTextReply("잘했어,{}".format(user.firstName))
+        fbQuery = FirebaseQuery()
+        user = fbQuery.get_user(id = self.sid, sourceService="facebook")
+        stamp = fbQuery.get_stamp(stampName = "achieve.1")
+        ffResponse.addImageReply(url= stamp.imgUrl)
+        ffResponse.addTextReply(text= stamp.prompt)
+        mission = fbQuery.get_mission_by_intent(intent = "mission.tutorial")
+        user.missionDone(mission = mission)
+        fbQuery.set_user(user = user)
+        ffResponse.addTextReply(text = "이제 새로운 미션을 하고 싶을 땐 언제든 '시작하기'라고 말해줘")
         return ffResponse
 
     def later(self):
@@ -239,10 +253,9 @@ class Processor():
             user = makeNewUserAndGet(self.sid, sourceService="facebook", countOne = False)
         missionList = getRandomMission(self.sid, getCount = 3)
         replyList = []
-        if u"intent" in self.params:
-            for mission in missionList:
-                if mission.intent == self.params[u"intent"]:
-                    missionList.remove(mission)
+        for mission in missionList:
+            if mission.intent == self.intent:
+                missionList.remove(mission)
         for mission in missionList:
             replyList.append(mission.phrase)
         replyList = replyList[0:2]
@@ -332,9 +345,8 @@ class Processor():
     def missionStart(self):
         ffResponse = FulfillmentResponse()
         fbQuery = FirebaseQuery()
-        if u"intent" in self.params:
-            user = fbQuery.get_user(self.sid, sourceService="facebook")
-            user.missionStart(self.params[u"intent"])
+        user = fbQuery.get_user(self.sid, sourceService="facebook")
+        user.missionStart(self.intent)
         # TODO : 시작 시나리오를 Json으로 가져오기(답변 속도 향상을 위함)
         fbQuery.set_user(user)
         return ffResponse
@@ -347,7 +359,6 @@ class Processor():
                 param = "nothing"
         else:
             param = "nothing"
-
         ffResponse = scenarioFromJson(fileName = "chooseCommunity", param =  param)
         ffResponse.addTextReply("그럼 오늘은 신청이나 등록 같은거 까지만 해보자")
         ffResponse.addFacebookQuickReply(title = "한번에 나가는 건 큰 결심이지만, 등록 같은건 금방 해볼 수 있자나",quickReplyList=["그러자"])
@@ -361,6 +372,7 @@ class Processor():
         ffResponse.addTextReply("커피와 당근을 아주 좋아하지")
         ffResponse.addTextReply("ㅎㅎ ㅜ 부끄럽다 이제 얼마나 대충 그려도 될지 알겠지?")
         ffResponse.addTextReply("다 그리면 보내줘ㅎ 기다릴게")
+        notUsingresponse = self.missionStart()
         return ffResponse
     def generalMissionDone(self):
         fbQuery = FirebaseQuery()
@@ -394,7 +406,8 @@ class Processor():
             quickReplyList.append(mission.phrase)
         quickReplyList.append("그만할래")
         ffResponse.addFacebookQuickReply(title="이런건 어때?", quickReplyList=quickReplyList)
-
+        self.agent.clearAllContext()
+        ffResponse.addContexts(self.agent.contexts)
         return ffResponse
 
     def emotionNeutral(self):

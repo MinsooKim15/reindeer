@@ -58,6 +58,9 @@ class Agent():
         for context in self.contexts:
             if (context.notSystemCounter())&(context.notGeneric()):
                 context.addParam(key = "intent", value = intent)
+    def clearAllContext(self):
+        for context in self.contexts:
+            context.clearCount()
 
 
 #Response 관련

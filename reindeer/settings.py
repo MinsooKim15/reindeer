@@ -28,7 +28,7 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', '"YOUR_SECREY_KEY")YOUR_SECREY_
 DEBUG = os.environ.get("DEBUG", False);
 
 ALLOWED_HOSTS = [
-    "f36b40a6.ngrok.io",
+    "773b848a.ngrok.io",
     "127.0.0.1",
     ".herokuapp.com"
 ]
