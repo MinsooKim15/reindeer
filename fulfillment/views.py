@@ -259,7 +259,7 @@ class Processor():
         for mission in missionList:
             replyList.append(mission.phrase)
         replyList = replyList[0:2]
-        ffResponse.addFacebookQuickReply(title= "그럼 이런건 어때",quickReplyList=replyList)
+        ffResponse.addFacebookQuickReply(title= "으음ㅜ 재밌을텐데 아쉽다. 그럼 이런건 어때",quickReplyList=replyList)
         return ffResponse
 
     def generalFeelGood(self):
