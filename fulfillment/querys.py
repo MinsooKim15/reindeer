@@ -1,6 +1,20 @@
 from firebase_admin import firestore
 from fulfillment.models import *
 import google.cloud.exceptions
+import os
+import logging
+import inspect
+
+path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+mainLogger = logging.getLogger("fulfillment")
+mainLogger.setLevel(logging.INFO)
+streamHandler = logging.StreamHandler()
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+streamHandler.setFormatter(formatter)
+mainLogger.addHandler(streamHandler)
+fileHandler = logging.FileHandler(path + "/main.log")
+fileHandler.setFormatter(formatter)
+mainLogger.addHandler(fileHandler)
 
 class FirebaseQuery(object):
 
@@ -75,3 +89,17 @@ class FirebaseQuery(object):
         else:
             mission = None
         return mission
+    def get_scenario_by_action(self,action):
+        db = firestore.client()
+        print(action)
+        mainLogger.info("get_scenario_by_action")
+        doc_ref = db.collection(u"scenarios").where(u"actionName", u"==", "general.greeting")
+        docs = doc_ref.stream()
+        mainLogger
+        scenarioList = []
+        for doc in docs:
+            mainLogger.info("doc값",doc.to_dict())
+            scenario = Scenario.from_dict(doc.to_dict())
+            scenario.set_id(doc.id)
+            scenarioList.append(scenario)
+        return scenarioList

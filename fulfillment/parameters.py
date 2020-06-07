@@ -19,6 +19,7 @@ class Actions:
         self.emotionBad = "emotion.bad"
         self.emotionNeutral = "emotion.neutral"
         self.emotionGood = "emotion.good"
+        self.greeting = "general.greeting"
 
 
 
@@ -28,6 +29,7 @@ class Events:
         self.selectMission = "actions_intent_SELECTMISSION"
         self.newMission = "actions_intent_NEWMISSION"
         self.finalFeedback = "actions_intent_FINALFEEDBACK"
+        self.welcome = "actions_intent_WELCOME"
 
 class Intents:
     def __init__(self):

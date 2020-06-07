@@ -286,3 +286,36 @@ def getStampIfExist(user,latestMission):
                     break
     print("종료", resultStamp)
     return resultStamp
+def getScenarioByAction(actionName , userId):
+    fbQuery = FirebaseQuery()
+    scenarioList = fbQuery.get_scenario_by_action(action=actionName)
+    targetScenario = None
+    #중복이면 마지막 시나리오를 드립니다.
+    mainLogger.info(scenarioList)
+    if len(scenarioList) > 0:
+        for scenario in scenarioList:
+            if (scenario.allUser == False) &(userId in scenario.targetUserList):
+                targetScenario = scenario
+        if targetScenario == None:
+            for scenario in scenarioList:
+                if (scenario.allUser == True):
+                    targetScenario = scenario
+    if targetScenario !=None:
+        promptList = getRandomScenario(targetScenario)
+    else:
+        promptList = None
+    return promptList
+def getRandomScenario(scenario):
+    targetPrompt = None
+    promptList = []
+    if len(scenario.promptList) > 0:
+        targetPrompt = random.choice(scenario.promptList)
+        promptList = targetPrompt.split("/")
+        for prompt in promptList:
+            prompt = prompt.strip()
+    return promptList
+
+
+
+
+

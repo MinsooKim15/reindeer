@@ -3,7 +3,7 @@ from datetime import datetime
 
 # Create your models here.
 class User(object):
-    def __init__(self,serviceId, sourceService = "facebook", totalCount=0,firstName="", lastName="",  intent={}, stamp=[],emotionTypeCount = {}, doingMission = None,latestMission = None ):
+    def __init__(self,serviceId, sourceService = "facebook", totalCount=0,firstName="", lastName="",  intent={}, stamp=[],emotionTypeCount = {}, doingMission = None,latestMission = None,notificationGreeting=None ):
         #firstName, lastName 비워질 수 있게 변경
 
         if len(firstName) > 0 :
@@ -18,6 +18,7 @@ class User(object):
         self.emotionTypeCount = emotionTypeCount
         self.doingMission = doingMission
         self.latestMission = latestMission
+        self.notificationGreeting = notificationGreeting
 
         if self.sourceService == "facebook":
             self.id = u"fb_" + serviceId
@@ -65,6 +66,10 @@ class User(object):
             user.latestMission = source[u"latestMission"]
         else:
             user.latestMission = None
+        if u"notificationGreeting" in source:
+            user.notificationGreeting = source[u"notificationGreeting"]
+        else:
+            user.notificationGreeting = None
 
         return user
 
@@ -84,6 +89,8 @@ class User(object):
            dest[u'firstName'] = self.firstName
         if self.lastName:
             dest[u"lastName"] = self.lastName
+        if self.notificationGreeting:
+            dest[u"notificationGreeting"] = self.notificationGreeting
         return dest
     def get_id(self):
         return self.id
@@ -91,7 +98,7 @@ class User(object):
         self.id = id
     def __repr__(self):
         return(
-            u"User(id={}, firstName={}, lastName={}, serviceId={}, sourceService={},totalCount ={}, intent={}, stamp={}, emotionTypeCount={}), latestMission={}, doingMission= {}".format(self.id, self.firstName, self.lastName, self.serviceId, self.sourceService, self.totalCount, self.intent, self.stamp, self.emotionTypeCount, self.latestMission, self.doingMission)
+            u"User(id={}, firstName={}, lastName={}, serviceId={}, sourceService={},totalCount ={}, intent={}, stamp={}, emotionTypeCount={}), latestMission={}, doingMission= {}, notificationGreeting= {}".format(self.id, self.firstName, self.lastName, self.serviceId, self.sourceService, self.totalCount, self.intent, self.stamp, self.emotionTypeCount, self.latestMission, self.doingMission, self.notificationGreeting)
         )
     def missionDone(self, mission = None):
 
@@ -226,4 +233,32 @@ class Mission(object):
     def __repr__(self):
         return(
             "Mission(id={}, intent={}, phrase={}, stampUrl ={}, emotionType={}, actionType={}, category={}, condition={}, notUse = {}, event ={}, useStamp ={}, doneEvent= {})".format(self.id, self.intent, self.phrase, self.stampUrl, self.emotionType, self.actionType, self.category, self.condition, self.notUse, self.event, self.useStamp, self.doneEvent)
+        )
+class Scenario(object):
+    def __init__(self, actionName, promptList, allUser, targetUserList):
+        self.id = None
+        self.actionName = actionName
+        self.promptList = promptList
+        self.allUser = allUser
+        self.targetUserList = targetUserList
+
+    @staticmethod
+    def from_dict(source):
+        scenario = Scenario(source[u"actionName"], source[u"promptList"], source[u"allUser"], source[u"targetUserList"])
+        return scenario
+    def to_dict(self):
+        dest = {
+            u"actionName" : self.actionName,
+            u"promptList" : self.promptList,
+            u"allUser" : self.allUser,
+            u"targetUserList" : self.targetUserList
+        }
+        return dest
+    def get_id(self):
+        return self.id
+    def set_id(self,id):
+        self.id = id
+    def __repr__(self):
+        return (
+            "Scenario(id ={}, actionName = {}, promptList = {}, allUser = {}, targetUserList = {})".format(self.id, self.actioName, self.promptList, self.allUser, self.targetUserList)
         )

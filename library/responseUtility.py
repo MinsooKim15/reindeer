@@ -14,6 +14,7 @@ class FulfillmentResponse():
         self.event = None
         self.button = None
         self.contexts = None
+        self.webviewUrl = None
     def addTextReply(self, text):
         # self.data["fulfillmentText"] = text
         reply = {
@@ -106,7 +107,8 @@ class FulfillmentResponse():
             "url" : url,
             "buttonText" : buttonText
         }
-
+    def addWebview(self, url):
+        self.webviewUrl = url
 
     def addContexts(self, contexts):
         #Context Class 상태로 받는다.
@@ -225,6 +227,31 @@ class FulfillmentResponse():
                     }
                 }
             }
+        if self.webviewUrl != None:
+            print(self.webviewUrl)
+            finalResult = {
+                "payload": {
+                "facebook": {
+                    "attachment": {
+                        "type":"template",
+                        "payload":{
+                            "template_type":"button",
+                            "text":"타이머 시작!",
+                            "buttons":[
+                                    {
+                                        "type":"web_url",
+                                        "url":self.webviewUrl,
+                                        "title":"URL Button",
+                                        "webview_height_ratio": "tall"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+
+
         if self.contexts != None:
             finalResult["outputContexts"] = self.contexts
 
@@ -392,3 +419,27 @@ def addIntentToContexts(contexts,intent):
             #         }
             #         }
             # }
+
+#WEBVIEW 예시
+# {
+#     "fulfillmentMessages": [
+#         {
+#         "payload": {
+#         "facebook": {
+#             "attachment": {
+#                 "type":"template",
+#                 "payload":{
+#                     "template_type":"button",
+#                     "text":"Try the URL button!",
+#                     "buttons":[
+#                         {
+#                             "type":"web_url",
+#                             "url":"https://www.messenger.com/",
+#                             "title":"URL Button",
+#                             "webview_height_ratio": "tall"
+#                         }
+#                     ]
+#                 }
+#             }
+#         }}
+#     }]}

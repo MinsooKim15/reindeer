@@ -162,6 +162,8 @@ def webhook(request):
         ffResponse = processor.emotionBad()
     if agent.action == paramActions.emotionNeutral:
         ffResponse = processor.emotionNeutral()
+    if agent.action == paramActions.greeting:
+        ffResponse = processor.generalGreeting()
     # ffResponse.addContexts(agent.contexts)
     finalResponse = ffResponse.getResponse()
     mainLogger.info({"response": finalResponse})
@@ -412,6 +414,10 @@ class Processor():
 
     def emotionNeutral(self):
         ffResponse = FulfillmentResponse()
+        #webview Url을 만들때 잠시 쓴 코드. 생각보다 사용하기 어려워서 안 쓸란다
+        # print("ffResponse")
+        # ffResponse.addWebview(url = "https://reindeer-webview-stg.firebaseapp.com/timer?sec=60")
+        # 아래는 실제 시나리오에 해당하는 코드
         missions = getRandomMission(self.sid, getCount= 3, sourceService= "facebook")
         ffResponse.addTextReply(text = "그럴 땐 나랑 노는 거 어때?")
 
@@ -421,4 +427,34 @@ class Processor():
         quickReplyList.append("그만할래")
         ffResponse.addFacebookQuickReply(title="새로운 미션들을 해보자", quickReplyList=quickReplyList)
         return ffResponse
+    def generalGreeting(self):
+        ffResponse = FulfillmentResponse()
+        # 처음이라면, Event로 첫인사 레인디어로 보낸다.
+        # 처음이 아니라면,
+        # 1) User에게 특별한 notificationGreeting이 들어있는지 확인한다.
+        # Yes -> notificationGreeting을 내보내고, notificationGreeting을 비운다.
+        # No -> Action명을 가지고, DB에서 시나리오를 모두 가져온다.
+        # 2) 시나리오 중 allUser = False 먼저 체크
+        # 3) 있다면 그거 내보냄.
+
+        # 처음 체크
+        userNew, user = checkNewAndGetUser(sid=self.sid, sourceService="facebook")
+        if userNew :
+            ffResponse.addFollowupEvent(event= paramEvents.welcome)
+        else:
+            if user.notificationGreeting !=None:
+                ffResponse.addTextReply(text = user.notificationGreeting)
+                user.notificationGreeting = None
+                fbQuery = FirebaseQuery()
+                fbQuery.set_user(user= user)
+            else:
+                mainLogger.info(self.action)
+                promptList = getScenarioByAction(actionName= self.action, userId= user.id)
+                if promptList != None:
+                    for prompt in promptList:
+                        ffResponse.addTextReply(text=prompt)
+                else:
+                    ffResponse.addTextReply(text= "안녕안녕!!!")
+        return ffResponse
+
 
